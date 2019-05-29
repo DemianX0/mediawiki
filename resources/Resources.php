@@ -1524,6 +1524,17 @@ return [
 			'jquery.spinner',
 		],
 	],
+	'mediawiki.page.share' => [
+		'styles' => 'resources/src/mediawiki.page.share.css',
+		'scripts' => 'resources/src/mediawiki.page.share.js',
+		'messages' => [
+			'share-popup-title',
+			'share-wikitext',
+			'share-url',
+			'share'
+		],
+		'dependencies' => []
+	],
 
 	/* MediaWiki Special pages */
 

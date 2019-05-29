@@ -1972,9 +1972,10 @@ abstract class Skin extends ContextSource {
 	 * @param string|null $tooltip The tooltip to use for the link: will be escaped
 	 *   and wrapped in the 'editsectionhint' message
 	 * @param Language $lang Language object
+	 * @param string $anchor The section HTML anchor name
 	 * @return string HTML to use for edit link
 	 */
-	public function doEditSectionLink( Title $nt, $section, $tooltip, Language $lang ) {
+	public function doEditSectionLink( Title $nt, $section, $tooltip, Language $lang, $anchor = '' ) {
 		// HTML generated here should probably have userlangattributes
 		// added to it for LTR text on RTL pages
 
@@ -2005,6 +2006,25 @@ abstract class Skin extends ContextSource {
 				$linkDetails['text'],
 				$linkDetails['attribs'],
 				$linkDetails['query']
+			);
+		}
+
+		if ( $this->getConfig()->get( 'EnableSectionHeaderShare' ) && $anchor !== '' ) {
+			$this->getOutput()->addModules( 'mediawiki.page.share' );
+
+			$shareMessage = $this->msg( 'share' )
+				->inLanguage( $lang )->text();
+			$shareTooltip = $this->msg( 'share-tooltip' )
+				->plaintextParams( $tooltip )->inLanguage( $lang )->text();
+
+			$linksHtml[] = $linkRenderer->makePreloadedLink(
+				$nt->createFragmentTarget( $anchor ),
+				$shareMessage,
+				'mw-editsection-share',
+				[
+					'title' => $shareTooltip,
+					'data-mw-share-section' => $tooltip
+				]
 			);
 		}
 
