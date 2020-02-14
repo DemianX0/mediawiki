@@ -1,7 +1,15 @@
 /**
- * WikimediaUI Base v0.14.0
+ * WikimediaUI Base v0.15.0
  * Wikimedia Foundation user interface base variables
+ *
+ * The normative version of this file is found at:
+ * https://phabricator.wikimedia.org/source/wikimedia-ui-base/browse/master/wikimedia-ui-base.less
+ *
+ * To use this in a skin or extension:  @import 'theme/wikimedia-ui-base';
  */
+// stylelint-disable max-empty-lines
+// stylelint-disable value-keyword-case
+
 
 // == Breakpoints ==
 // The following numbers are prone to change with new information.
@@ -79,7 +87,7 @@
 @background-color-warning--framed: @wmui-color-yellow90;
 @background-color-success--framed: @wmui-color-green90;
 @background-color-notice--framed: @wmui-color-base80;
-// Highlight Colors, RGBA Colors include hex fallback on `#fff` for IE 6/7/8
+// Highlight Colors, RGBA Colors include hex fallback on `#fff` for IE 8
 @background-color-highlight:      rgba( 255, 182, 13, 0.4 );
 @background-color-highlight--fallback: #ffe29e;
 
@@ -189,21 +197,98 @@
 @box-shadow-menu:                 @box-shadow-dialog;
 
 
-// == Typography incl. print properties ==
-// Font Families
-@font-family-base:                @font-family-sans;
-@font-family-heading-main:        @font-family-serif;
-// To be deprecated
-@font-family-sans:                'Helvetica Neue', 'Helvetica', 'Nimbus Sans L', 'Arial', 'Liberation Sans', sans-serif;
+// == Typography ==
+//
+// Detailed documentation of the font choices (README-fonts.md):
+// https://www.mediawiki.org/wiki/Wikimedia_User_Interface/Use_cases/Font_family_stack
+// Style guide for fonts:
+// https://design.wikimedia.org/style-guide/visual-style_typography.html#typefaces
+// The 2014 research project:
+// https://www.mediawiki.org/wiki/Typography_refresh/Font_choice
+//
+
+// Font-family variables to be defined by skins and extensions
+
+@font-family-base:       @font-family-sans;  // Font stack for content body
+@font-family-heading:    @font-family-serif; // Font stack for headings (h1-h6)
+
+// @font-family-sans is DEPRECATED since v0.13.0 (2018-12-05) to be defined by @font-family-system-sans in the future.
+// As of 2020-02-20 the only user of @font-family-sans is Wikibase:
+// https://codesearch.wmflabs.org/search/?q=font-family-sans&i=nope&files=&repos=
+// https://github.com/wikimedia/mediawiki-extensions-Wikibase/blob/ffd6ef8ce371d39b1437550e5894393e1f4c231e/client/data-bridge/src/presentation/components/EventEmittingButton.vue#L154
+@font-family-sans:       'Helvetica Neue', 'Helvetica', 'Liberation Sans', 'Arial', sans-serif;
+
+@font-family-serif:      @font-family-system-serif;
+@font-family-monospace:  @font-family-system-monospace;
+
+// Fallbacks
 @font-family-sans--fallback:      sans-serif;
-// Provide better operating system-specific readability, see T175877
-// `system-ui` is currently not an option due to OS/language combination issues, see T175877#4776576
-@font-family-system-sans:         -apple-system, 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Lato', 'Helvetica', 'Arial', sans-serif;
-@font-family-serif:               'Linux Libertine', 'Georgia', 'Times', serif;
 @font-family-serif--fallback:     serif;
-// Provide better operating system-specific monospace stack, see T209915.
-@font-family-monospace:           'Menlo', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
-@font-family-monospace--fallback: monospace, monospace; // See T176636
+@font-family-monospace--fallback: monospace, monospace; // See:  https://phabricator.wikimedia.org/T176636
+// Monospace fix:  http://code.iamkate.com/html-and-css/fixing-browsers-broken-monospace-font-handling/
+
+//
+// == WikimediaUI Base system font stacks ==
+// These are fonts typically installed with the OS.
+//
+// Variables:
+// @font-family-system-sans
+// @font-family-system-serif
+// @font-family-system-monospace
+
+//
+// Font stack for sans-serif fonts.
+//
+// See T175877 for the most recent discussion concerning the sans-serif font stack for Minerva.
+// Related research in 2014:  https://www.mediawiki.org/wiki/Typography_refresh
+//
+// The following fonts have previously been used here and we recommend against their usage:
+// system-ui         - T175877#4776576 - `system-ui` has resulted in unresolved side-effects in certain OS/language combinations.
+// 'Arimo'           - T65512  - Part of Chrome OS core fonts, metrical equivalent of Arial.
+// 'Helvetica Neue'  - T63470  - Helvetica Neue cannot render some combining characters correctly.
+// 'Nimbus Sans L'   - T245467 - Was only an OS default on early Linux distributions like Ubuntu <=8.10
+// 'Liberation Sans' - T65591  - Windows renders Liberation Sans in very ugly way.
+
+@font-family-system-sans:
+	-apple-system,        // 'San Francisco' – Safari >=9 macOS and iOS, Firefox macOS.
+	'BlinkMacSystemFont', // 'San Francisco' – Chrome >=48 macOS and iOS.
+	'Segoe UI',           // Windows Vista & newer, intended to improve the consistency in how users see all text across all languages.
+	'Roboto',             // Android 4, webfont.
+	'Lato',               // Elegant, Wikimedia Design choice, OFL licensed.
+	'Helvetica',          // Generic.
+	'Arial',              // Windows.
+	sans-serif;           // Platform default: 'Arial' on Windows.
+
+//
+// Font stack for serif fonts.
+//
+// See T73240 for a related discussion concerning the serif font stack.
+// Numbers with Georgia font are non-lining, the font-feature to change this is documented at:
+// https://www.mediawiki.org/wiki/Talk:Typography_refresh/Archive_2#Numbers_looks_weird_in_article_title
+// https://www.mediawiki.org/wiki/Talk:Typography_refresh/Archive_4#Inconsistent_font_heights_with_Georgia_for_CJK
+
+@font-family-system-serif:
+	'Linux Libertine', // GNU+Linux, alternative to Times New Roman.
+	'Georgia',         // Windows, intended as a serif typeface that would appear elegant but legible printed small or on low-resolution screens.
+	'Times',           // Windows, very similar to Times New Roman with subtle differences.
+	serif;             // Platform default: 'Times New Roman' on Windows.
+
+//
+// Font stack for monospace fonts. Last discussed in T209915.
+//
+// The following font has previously been used here:
+// 'SFMono-Regular' - 'SFMono-Regular' would only be available if user willingly installs it in macOS
+// - https://gerrit.wikimedia.org/r/c/wikimedia-ui-base/+/504224 (hard-to-find patch)
+
+@font-family-system-monospace:
+	'Menlo',           // Since macOS >=10.6, more legible than Monaco.
+	'Consolas',        // Windows Vista & newer.
+	'Liberation Mono', // Fedora, Ubuntu, … OFL licensed.
+	'Courier New',     // Generic.
+	monospace;         // Platform default.
+
+
+// == Text Properties ==
 // Line Heights
 @line-height-base:                1.6;
 @line-height-heading:             1.25;
