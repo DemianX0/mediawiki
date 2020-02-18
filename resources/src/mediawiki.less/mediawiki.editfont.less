@@ -1,8 +1,17 @@
-/* Edit font preference */
-.mw-editfont-monospace {
-	font-family: monospace, monospace;
-}
+// T182320: Historically the source editor's font-size was
+// set to 13px (92.86% of 14px) for all font families.
+//@font-size-editor: 13px;
+//@font-size-editor--monospace: 13px;
 
+// T245476
+@font-size-editor: inherit; // Inherit skin's font-size.
+//@font-size-editor--monospace: unit( 13px / 14px * 100, % ); // 92.85714286%, alt: 0.92857143em - 13px at 14px skin font-size.
+//@font-size-editor--monospace: unit( 14px / 16px * 100, % ); // 87.5% - 14px at 16px skin font-size.
+//@font-size-editor--monospace: unit( 15px / 16px * 100, % ); // 93.75% - 15px at 16px skin font-size.
+@font-size-editor--monospace: 90%; // monospace fonts at 90% render about the same size as serif and sans fonts at 100%.
+
+/* Edit font preference */
+.mw-editfont-sans, // New shorthand.
 .mw-editfont-sans-serif {
 	font-family: sans-serif;
 }
@@ -11,11 +20,28 @@
 	font-family: serif;
 }
 
-/* Standardize font size for edit areas using edit-fonts T182320 */
-.mw-editfont-monospace,
+.mw-editfont-sans, // New shorthand.
 .mw-editfont-sans-serif,
 .mw-editfont-serif {
-	font-size: 13px;
+	font-size: @font-size-editor;
+}
+
+.mw-editfont-mono, // New shorthand.
+.mw-editfont-monospace {
+	// T182320
+	font-family: monospace, monospace;
+
+	&,
+	&.oo-ui-textInputWidget > .oo-ui-inputWidget-input {
+		font-size: @font-size-editor--monospace;
+	}
+}
+
+.mw-editfont-sans, // New shorthand.
+.mw-editfont-sans-serif,
+.mw-editfont-serif,
+.mw-editfont-mono, // New shorthand.
+.mw-editfont-monospace {
 	/* Standardize tab width when in edit areas */
 	-moz-tab-size: 4;
 	tab-size: 4;
@@ -25,10 +51,6 @@
 	   of the widget and size of icons etc. (which are expressed in ems) to stay the same. */
 	&.oo-ui-textInputWidget {
 		font-size: inherit;
-
-		> .oo-ui-inputWidget-input {
-			font-size: 13px;
-		}
 
 		// Single-line only, preserve original height to avoid
 		// reflow when toggling (T246136) and to align with buttons
