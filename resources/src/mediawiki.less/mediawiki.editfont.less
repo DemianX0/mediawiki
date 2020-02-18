@@ -1,8 +1,10 @@
-/* Edit font preference */
-.mw-editfont-monospace {
-	font-family: monospace, monospace;
-}
+// T245476
+@font-size-editor: inherit; // Inherit skin's font-size.
+@font-size-monospace: 0.875em; // 14px at 16px skin font-size.
+@font-size-monospace: 0.9em; // monospace fonts at 90% render about the same size as serif and sans fonts at 100%.
 
+/* Edit font preference */
+.mw-editfont-sans,
 .mw-editfont-sans-serif {
 	font-family: sans-serif;
 }
@@ -11,22 +13,51 @@
 	font-family: serif;
 }
 
-/* Standardize font size for edit areas using edit-fonts T182320 */
-.mw-editfont-monospace,
+.mw-editfont-sans,
 .mw-editfont-sans-serif,
 .mw-editfont-serif {
-	font-size: 13px;
+	font-size: @font-size-editor; // Override UA's textarea style (13.3px in Chrome).
+}
 
-	/* For OOUI TextInputWidget, the parent <div> element uses normal font size, and only
-	   the <textarea>/<input> inside of it has the adjusted font size. This allows the width
-	   of the widget and size of icons etc. (which are expressed in ems) to stay the same. */
+.mw-editfont-monospace {
+	// T182320
+	font-family: monospace, monospace;
+
+	&,
+	&.oo-ui-textInputWidget > .oo-ui-inputWidget-input {
+		font-size: @font-size-monospace;
+	}
+
+	// For OOUI TextInputWidget, the parent <div> element uses normal font size, and only
+	// the <textarea>/<input> inside of it has the adjusted font size. This allows the width
+	// of the widget and size of icons, etc. (which are expressed in ems) to stay the same.
 	&.oo-ui-textInputWidget {
 		font-size: inherit;
+	}
+}
 
-		> .oo-ui-inputWidget-input {
-			font-size: 13px;
-		}
+// stylelint-disable unit-blacklist
+// stylelint-disable-next-line selector-class-pattern
+.skin-vector .mw-editfont-monospace {
+	// T182320
+	// Historically the source editor's font-size is
+	// set to 13px (92.86%) for all font families. See T182320.
+	// FIXME: Move these rules to Vector, load from there.
+	// VE's WTE2017 and DiscussionTools loads this async.
+	@font-size-monospace: 13rem / 16;
+	@font-size-base: 14em / 16;
 
+	&,
+	&.oo-ui-textInputWidget > .oo-ui-inputWidget-input {
+		// Non-rem browsers:
+		font-size: unit( @font-size-monospace / @font-size-base, em ); // Relative to parent.
+		// Non-calc browsers:
+		font-size: @font-size-monospace; // Relative to browser font-size.
+		// IE9-11 and evergreens:
+		font-size: calc( 1rem ~'*' unit( @font-size-monospace ) ); // T102364
+	}
+
+	&.oo-ui-textInputWidget {
 		// Single-line only, preserve original height to avoid
 		// reflow when toggling (T246136) and to align with buttons
 		// in ActionFieldLayout
