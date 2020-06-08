@@ -1624,6 +1624,7 @@ abstract class Skin extends ContextSource {
 		$config = $this->getConfig();
 		$languageCode = $this->getLanguage()->getCode();
 
+		// Cached sidebar content and order.
 		$sidebar = $config->get( 'EnableSidebarCache' )
 			? $wanCache->getWithSetCallback(
 				$wanCache->makeKey( 'sidebar', $languageCode ),
@@ -1640,13 +1641,29 @@ abstract class Skin extends ContextSource {
 			)
 			: $callback();
 
+		$moveToBottom = [];
+		if ( !isset( $sidebar['TOOLBOX'] ) ) {
+			$moveToBottom[] = 'TOOLBOX';
+		}
+		$moveToBottom[] = 'LANGUAGES';
+
 		$sidebar['TOOLBOX'] = $this->makeToolbox(
 			$this->buildNavUrls(),
 			$this->buildFeedUrls()
 		);
 		$sidebar['LANGUAGES'] = $this->getLanguages();
-		// Apply post-processing to the cached value
+
+		// Extensions: add sidebar portlets, links and adjust sidebar elements.
 		$this->getHookRunner()->onSidebarBeforeOutput( $this, $sidebar );
+
+		// Move TOOLBOX and LANGUAGES to the bottom if their position was not defined by [[MediaWiki:Sidebar]].
+		foreach ( $moveToBottom as $key ) {
+			$moved = $sidebar[$key];
+			// Drop item from middle of array.
+			unset( $sidebar[$key] );
+			// Add item to end of array.
+			$sidebar[$key] = $moved;
+		}
 
 		return $sidebar;
 	}
