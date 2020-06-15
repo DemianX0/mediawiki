@@ -1155,7 +1155,7 @@ return [
 		'targets' => [ 'desktop', 'mobile' ],
 	],
 	'mediawiki.editfont.styles' => [
-		'styles' => 'resources/src/mediawiki.editfont.less',
+		'styles' => 'resources/src/mediawiki.less/mediawiki.editfont.less',
 		'targets' => [ 'desktop', 'mobile' ],
 	],
 	'mediawiki.visibleTimeout' => [
