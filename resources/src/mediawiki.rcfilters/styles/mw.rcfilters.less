@@ -9,6 +9,11 @@
 @rcfilters-head-min-height-collapsed: 130px;
 @rcfilters-wl-head-min-height-collapsed: 220px;
 
+@rcfilters-spinner-anim-duration: 1000ms;
+@anim-duration-anim-delay: round( @rcfilters-spinner-anim-duration / 9 ); // 111ms
+@rcfilters-spinner-scale--small: 0.625;
+@rcfilters-spinner-opacity--small: 0.87;
+
 // Corrections for the standard special page
 .client-js {
 	/* stylelint-disable-next-line selector-class-pattern */
@@ -127,17 +132,20 @@
 			width: @rcfilters-spinner-size;
 			height: @rcfilters-spinner-size;
 			border-radius: 100%;
-			.animation( rcfiltersBouncedelay 1600ms ease-in-out -160ms infinite both );
+			.animation( rcfiltersBouncedelay @rcfilters-spinner-anim-duration infinite linear both );
 		}
 
 		&:before {
-			margin-right: 4px;
-			.animation-delay( -330ms );
+			margin-right: @rcfilters-spinner-size / 4;
+		}
+
+		.mw-rcfilters-spinner-bounce {
+			.animation-delay( @anim-duration-anim-delay );
 		}
 
 		&:after {
-			margin-left: 4px;
-			.animation-delay( 0s );
+			margin-left: @rcfilters-spinner-size / 4;
+			.animation-delay( @anim-duration-anim-delay * 2 );
 		}
 	}
 
@@ -194,42 +202,37 @@
 }
 
 @-webkit-keyframes rcfiltersBouncedelay {
-	// 50% equals 800ms
 	0%,
-	50%,
 	100% {
-		-webkit-transform: scale( 0.625 );
+		-webkit-transform: scale( @rcfilters-spinner-scale--small );
 	}
 
-	// equals 320ms
-	20% {
-		opacity: 0.87;
+	50% {
+		opacity: @rcfilters-spinner-opacity--small;
 		-webkit-transform: scale( 1 );
 	}
 }
 
 @-moz-keyframes rcfiltersBouncedelay {
 	0%,
-	50%,
 	100% {
-		-moz-transform: scale( 0.625 );
+		-moz-transform: scale( @rcfilters-spinner-scale--small );
 	}
 
-	20% {
-		opacity: 0.87;
+	50% {
+		opacity: @rcfilters-spinner-opacity--small;
 		-moz-transform: scale( 1 );
 	}
 }
 
 @keyframes rcfiltersBouncedelay {
 	0%,
-	50%,
 	100% {
-		transform: scale( 0.625 );
+		transform: scale( @rcfilters-spinner-scale--small );
 	}
 
-	20% { // equals 320ms
-		opacity: 0.87;
+	50% {
+		opacity: @rcfilters-spinner-opacity--small;
 		transform: scale( 1 );
 	}
 }
