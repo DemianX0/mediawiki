@@ -132,8 +132,24 @@ function updateAriaExpanded( checkbox, button ) {
 }
 
 /**
- * setCheckedState() is called when a user event on some element other than the checkbox
+ * Set the checked state and fire the 'input' event.
+ * Programmatic changes to checkbox.checked do not trigger an input or change event.
+ * The input event in turn will call updateAriaExpanded().
+ *
+ * setCheckedState() is called when a user event on
+ * some element other than the checkbox
  * should result in changing the checkbox state.
+ *
+ * Per https://html.spec.whatwg.org/multipage/indices.html#event-input
+ * Input event is fired at controls when the user changes the value.
+ * Per https://html.spec.whatwg.org/multipage/input.html#checkbox-state-(type=checkbox):event-input
+ * Fire an event named input at the element with the bubbles attribute initialized to true.
+ *
+ * https://html.spec.whatwg.org/multipage/indices.html#event-change
+ * For completeness the 'change' event should be fired too,
+ * however we make no use of the 'change' event,
+ * nor expect it to be used, thus firing it
+ * would be unnecessary load.
  *
  * @param {HTMLInputElement} checkbox
  * @param {HTMLElement} button
@@ -142,8 +158,20 @@ function updateAriaExpanded( checkbox, button ) {
  * @ignore
  */
 function setCheckedState( checkbox, button, checked ) {
+	var /** @type {Event} */ e;
 	checkbox.checked = checked;
-	updateAriaExpanded( checkbox, button );
+	// Chrome and Firefox sends the builtin Event with .bubbles == true and .composed == true.
+	if ( typeof Event === 'function' ) {
+		e = new Event( 'input', { bubbles: true, composed: true } );
+	} else {
+		// IE 9-11, FF 6-10, Chrome 9-14, Safari 5.1, Opera 11.5, Android 3-4.3
+		e = document.createEvent( 'CustomEvent' );
+		if ( !e ) {
+			return;
+		}
+		e.initCustomEvent( 'input', true /* canBubble */, false, false );
+	}
+	checkbox.dispatchEvent( e );
 }
 
 /**
