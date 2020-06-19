@@ -87,7 +87,7 @@ abstract class BaseTemplate extends QuickTemplate {
 	 *  The keys `search`, `toolbox` and `languages` are accepted.
 	 * @return array representing the sidebar
 	 */
-	protected function getSidebar( $options = [] ) {
+	public function getSidebar( $options = [] ) {
 		// Force the rendering of the following portals
 		$sidebar = $this->data['sidebar'];
 		if ( !isset( $sidebar['SEARCH'] ) ) {
@@ -287,7 +287,7 @@ abstract class BaseTemplate extends QuickTemplate {
 	 * @param string|null $option
 	 * @return array|mixed
 	 */
-	protected function getFooterLinks( $option = null ) {
+	public function getFooterLinks( $option = null ) {
 		$footerlinks = $this->get( 'footerlinks' );
 
 		// Reduce footer links down to only those which are being used
