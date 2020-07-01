@@ -180,7 +180,37 @@ function handleStateChange( self, event ) {
 }
 
 /**
+ * Create and dispatch a bubbling DOM Event on `target`.
+ *
+ * @param {string} type Event type
+ * @param {HTMLElement} target
+ * @param {Event} [originalEvent] Triggering user event, if any
+ * @return {void}
+ * @ignore
+ */
+function fireChangeEvent( type, target, originalEvent ) {
+	/** @type {any} */
+	var newEvent;
+
+	// Chrome and Firefox sends the builtin Event with .bubbles == true and .composed == true.
+	if ( typeof Event === 'function' ) {
+		newEvent = new Event( type, { bubbles: true, composed: true } );
+	} else {
+		// IE 9-11, FF 6-10, Chrome 9-14, Safari 5.1, Opera 11.5, Android 3-4.3
+		newEvent = document.createEvent( 'CustomEvent' );
+		if ( !newEvent ) {
+			return;
+		}
+		newEvent.initCustomEvent( type, true /* canBubble */, false, false );
+	}
+
+	newEvent.originalEvent = originalEvent;
+	target.dispatchEvent( newEvent );
+}
+
+/**
  * Set the checkbox state, the `aria-expanded` attribute and call the onChange() callback.
+ * Also fires the 'input' event on the checkbox to notify listeners of the change.
  *
  * setCheckedState() is called when a user event on some element other than the checkbox
  * should result in changing the checkbox state.
@@ -194,6 +224,11 @@ function handleStateChange( self, event ) {
  * Fire an event named input at the element with the bubbles attribute initialized to true.
  * https://html.spec.whatwg.org/multipage/indices.html#event-change
  *
+ * For completeness the 'change' event should be fired too,
+ * however we make no use of the 'change' event,
+ * nor expect it to be used, thus firing it
+ * would be unnecessary load.
+ *
  * @param {CheckboxHack} self
  * @param {boolean} checked
  * @param {Event} event
@@ -203,7 +238,9 @@ function handleStateChange( self, event ) {
 function setCheckedState( self, checked, event ) {
 	if ( self.checkbox.checked !== checked ) {
 		self.checkbox.checked = checked;
-		handleStateChange( self, event );
+		// Event triggers handleStateChange()
+		fireChangeEvent( 'input', self.checkbox, event );
+		// fireChangeEvent( 'change', self.checkbox, event );
 	}
 }
 
