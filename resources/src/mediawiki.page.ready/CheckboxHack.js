@@ -156,48 +156,68 @@
 // TODO JsDoc: @typedef {EventListener | EventListenerObject} Function - instead of Function
 
 /**
- * Revise the button's `aria-expanded` state to match the checked state.
+ * Update the `aria-expanded` (target visibility) attribute
+ * then fire the onChange(event) callback with `this` set to the CheckboxHack instance.
  *
- * @param {HTMLInputElement} checkbox
- * @param {HTMLElement} button
+ * handleStateChange() is called on every state change, either by the user clicking the checkbox
+ * or other event resulting in a programmatic change to the state.
+ *
+ * @param {CheckboxHack} self
+ * @param {Event} event Triggering user event
  * @return {void}
  * @ignore
  */
-function updateAriaExpanded( checkbox, button ) {
-	button.setAttribute( 'aria-expanded', checkbox.checked.toString() );
+function handleStateChange( self, event ) {
+	self.button.setAttribute( 'aria-expanded', self.checkbox.checked.toString() );
+	if ( self.onChange ) {
+		// Last call, therefore no exception handler. Errors will wind up to the event loop.
+		self.onChange( event );
+	}
 }
 
 /**
+ * Set the checkbox state, the `aria-expanded` attribute and call the onChange() callback.
+ *
  * setCheckedState() is called when a user event on some element other than the checkbox
  * should result in changing the checkbox state.
  *
- * @param {HTMLInputElement} checkbox
- * @param {HTMLElement} button
+ * Programmatic changes to checkbox.checked do not trigger an 'input' or 'change' event,
+ * therefore that cannot be used for this purpose, unless emulated.
+ *
+ * Per https://html.spec.whatwg.org/multipage/indices.html#event-input
+ * Input event is fired at controls when the user changes the value.
+ * Per https://html.spec.whatwg.org/multipage/input.html#checkbox-state-(type=checkbox):event-input
+ * Fire an event named input at the element with the bubbles attribute initialized to true.
+ * https://html.spec.whatwg.org/multipage/indices.html#event-change
+ *
+ * @param {CheckboxHack} self
  * @param {boolean} checked
+ * @param {Event} event
  * @return {void}
  * @ignore
  */
-function setCheckedState( checkbox, button, checked ) {
-	checkbox.checked = checked;
-	updateAriaExpanded( checkbox, button );
+function setCheckedState( self, checked, event ) {
+	if ( self.checkbox.checked !== checked ) {
+		self.checkbox.checked = checked;
+		handleStateChange( self, event );
+	}
 }
 
 /**
  * Returns true if the Event's target is an inclusive descendant of any the checkbox hack's
- * constituents (checkbox, button, or target), and false otherwise.
+ * constituents (checkbox, button or controlled element).
  *
- * @param {HTMLInputElement} checkbox
- * @param {HTMLElement} button
+ * @param {CheckboxHack} self
  * @param {Node} target
- * @param {Event} event
  * @return {boolean}
  * @ignore
  */
-function containsEventTarget( checkbox, button, target, event ) {
-	return event.target instanceof Node && (
-		checkbox.contains( event.target ) ||
-		button.contains( event.target ) ||
-		target.contains( event.target )
+function containsEventTarget( self, target ) {
+	var autoHideElement = self.options.autoHideElement;
+	return (
+		self.checkbox.contains( target ) ||
+		self.button.contains( target ) ||
+		autoHideElement && autoHideElement.contains( target )
 	);
 }
 
@@ -205,50 +225,48 @@ function containsEventTarget( checkbox, button, target, event ) {
  * Dismiss the target when event is outside the checkbox, button, and target.
  * In simple terms this closes the target (menu, typically) when clicking somewhere else.
  *
- * @param {HTMLInputElement} checkbox
- * @param {HTMLElement} button
- * @param {Node} target
+ * @param {CheckboxHack} self
  * @param {Event} event
  * @return {void}
  * @ignore
  */
-function dismissIfExternalEventTarget( checkbox, button, target, event ) {
-	if ( checkbox.checked && !containsEventTarget( checkbox, button, target, event ) ) {
-		setCheckedState( checkbox, button, false );
+function dismissIfExternalEventTarget( self, event ) {
+	if ( event.target instanceof Node && !containsEventTarget( self, event.target ) ) {
+		setCheckedState( self, false, event );
 	}
 }
 
 /**
- * Update the `aria-expanded` attribute based on checkbox state (target visibility) changes.
+ * Whenever the checkbox state changes, update the `aria-expanded` (target visibility) attribute
+ * then fire the onChange() callback.
  *
- * @param {HTMLInputElement} checkbox
- * @param {HTMLElement} button
- * @return {CheckboxHackListeners}
+ * @param {CheckboxHack} self
+ * @param {CheckboxHackListeners} listeners
+ * @return {void}
  * @ignore
  */
-function bindUpdateAriaExpandedOnInput( checkbox, button ) {
-	var listener = updateAriaExpanded.bind( undefined, checkbox, button );
+function bindHandleStateChange( self ) {
+	var listener = handleStateChange.bind( undefined, self );
 	// Whenever the checkbox state changes, update the `aria-expanded` state.
-	checkbox.addEventListener( 'input', listener );
+	self.checkbox.addEventListener( 'input', listener );
 	return { onUpdateAriaExpandedOnInput: listener };
 }
 
 /**
  * Manually change the checkbox state to avoid a focus change when using a pointing device.
  *
- * @param {HTMLInputElement} checkbox
- * @param {HTMLElement} button
+ * @param {CheckboxHack} self
  * @return {CheckboxHackListeners}
  * @ignore
  */
-function bindToggleOnClick( checkbox, button ) {
+function bindToggleOnClick( self ) {
 	function listener( event ) {
 		// Do not allow the browser to handle the checkbox. Instead, manually toggle it which does
 		// not alter focus.
 		event.preventDefault();
-		setCheckedState( checkbox, button, !checkbox.checked );
+		setCheckedState( self, !self.checkbox.checked, event );
 	}
-	button.addEventListener( 'click', listener, true );
+	self.button.addEventListener( 'click', listener, true );
 	return { onToggleOnClick: listener };
 }
 
@@ -256,16 +274,13 @@ function bindToggleOnClick( checkbox, button ) {
  * Dismiss the target when clicking elsewhere and update the `aria-expanded` attribute based on
  * checkbox state (target visibility).
  *
- * @param {Window} window
- * @param {HTMLInputElement} checkbox
- * @param {HTMLElement} button
- * @param {Node} target
+ * @param {CheckboxHack} self
  * @return {CheckboxHackListeners}
  * @ignore
  */
-function bindDismissOnClickOutside( window, checkbox, button, target ) {
-	var listener = dismissIfExternalEventTarget.bind( undefined, checkbox, button, target );
-	window.addEventListener( 'click', listener, true );
+function bindDismissOnClickOutside( self ) {
+	var listener = dismissIfExternalEventTarget.bind( undefined, self );
+	self.window.addEventListener( 'click', listener, true );
 	return { onDismissOnClickOutside: listener };
 }
 
@@ -273,18 +288,15 @@ function bindDismissOnClickOutside( window, checkbox, button, target ) {
  * Dismiss the target when focusing elsewhere and update the `aria-expanded` attribute based on
  * checkbox state (target visibility).
  *
- * @param {Window} window
- * @param {HTMLInputElement} checkbox
- * @param {HTMLElement} button
- * @param {Node} target
+ * @param {CheckboxHack} self
  * @return {CheckboxHackListeners}
  * @ignore
  */
-function bindDismissOnFocusLoss( window, checkbox, button, target ) {
+function bindDismissOnFocusLoss( self ) {
 	// If focus is given to any element outside the target, dismiss the target. Setting a focusout
 	// listener on the target would be preferable, but this interferes with the click listener.
-	var listener = dismissIfExternalEventTarget.bind( undefined, checkbox, button, target );
-	window.addEventListener( 'focusin', listener, true );
+	var listener = dismissIfExternalEventTarget.bind( undefined, self );
+	self.window.addEventListener( 'focusin', listener, true );
 	return { onDismissOnFocusLoss: listener };
 }
 
@@ -365,13 +377,13 @@ function CheckboxHack( window, checkbox, button, options, onChange ) {
 		listeners = {}; // Release references.
 	};
 
-	listeners.onUpdateAriaExpandedOnInput = bindUpdateAriaExpandedOnInput( checkbox ).onUpdateAriaExpandedOnInput;
+	listeners.onUpdateAriaExpandedOnInput = bindHandleStateChange( this ).onUpdateAriaExpandedOnInput;
 	if ( !options.noClickHandler ) {
-		listeners.onToggleOnClick = bindToggleOnClick( checkbox, button ).onToggleOnClick;
+		listeners.onToggleOnClick = bindToggleOnClick( this ).onToggleOnClick;
 	}
 	if ( options.autoHideElement ) {
-		listeners.onDismissOnClickOutside = bindDismissOnClickOutside( window, checkbox, button, options.autoHideElement ).onDismissOnClickOutside;
-		listeners.onDismissOnFocusLoss = bindDismissOnFocusLoss( window, checkbox, button, options.autoHideElement ).onDismissOnFocusLoss;
+		listeners.onDismissOnClickOutside = bindDismissOnClickOutside( this ).onDismissOnClickOutside;
+		listeners.onDismissOnFocusLoss = bindDismissOnFocusLoss( this ).onDismissOnFocusLoss;
 	}
 }
 
@@ -379,12 +391,19 @@ function CheckboxHack( window, checkbox, button, options, onChange ) {
  * Public API
  */
 module.exports = CheckboxHack;
+/* Deprecated internal API, used only by Vector, destined to be removed after Vector is updated. */
+CheckboxHack.bindToggleOnClick = function ( checkbox, button ) {
+	// Do all the initialization in the first call, ignore the rest.
+	return new CheckboxHack( window, checkbox, button );
+};
 
-/* Deprecated internal API, used only by Vector, removed when migrated. */
-// Note: it's a temporary hack to add these as properties on the constructor function.
-CheckboxHack.updateAriaExpanded = updateAriaExpanded;
-CheckboxHack.bindUpdateAriaExpandedOnInput = bindUpdateAriaExpandedOnInput;
-CheckboxHack.bindToggleOnClick = bindToggleOnClick;
+CheckboxHack.bindUpdateAriaExpandedOnInput = function () {
+	// NOP
+};
+
+CheckboxHack.updateAriaExpanded = function () {
+	// NOP
+};
 
 /* Unused internal API removed immediately, no deprecation.
 	bindDismissOnClickOutside: bindDismissOnClickOutside,
