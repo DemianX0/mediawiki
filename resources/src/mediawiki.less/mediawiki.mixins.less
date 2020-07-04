@@ -126,9 +126,34 @@
 	break-inside: avoid-column; // IE 10+, Opera 11.1-12.1
 }
 
-.flex-display( @display: flex ) {
+//
+// Flexbox layout prefixes
+//
+
+// Convenience / shorthand mixins
+.display-flex() {
+	.display( flex );
+}
+
+.display-inline-flex() {
+	.display( inline-flex );
+}
+
+// Standard mixins
+.display( @display ) when ( @display = flex ), ( @display = inline-flex ) {
+	// https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flexible_Box_Layout/Mixins
 	display: ~'-ms-@{display}box'; // IE 10
+}
+
+.display( @display ) {
+	// For all values.
 	display: @display;
+}
+
+// Deprecated in MW 1.35, not planned to remove yet.
+// Use instead: .display-flex(); / .display-flex( inline ); / .display( flex ); / .display( inline-flex );
+.flex-display( @display: flex ) {
+	.display( @display );
 }
 
 .flex-wrap( @wrap: wrap ) {
@@ -136,24 +161,73 @@
 	flex-wrap: @wrap;
 }
 
+.flex-size( @grow: 0, @shrink: 1, @base-size: auto, @direction: row ) when ( @direction = row ), ( @direction = row-reverse ) {
+	width: @base-size; // Fallback for flex-basis.
+}
+
+// NOTE: `flex-direction: column` is not supported in IE9 and a few Basic support browsers.
+// https://caniuse.com/#feat=mdn-css_properties_flex-direction
+.flex-size( @grow: 0, @shrink: 1, @base-size: auto, @direction: row ) when ( @direction = column ), ( @direction = column-reverse ) {
+	height: @base-size; // Fallback for flex-basis.
+}
+
+.flex-size( @grow: 0, @shrink: 1, @base-size: auto, @direction: row ) {
+	// https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flexible_Box_Layout/Mixins#Flexbox_flex_shorthand
+	// 2009 spec only supports 'flexible' as opposed to grow (flexPositive)
+	// and shrink (flexNegative); default to grow value
+	-webkit-box-flex: @grow; // iOS 6-, Safari 3.1-6 ????
+	-moz-box-flex: @grow; // Firefox 21- ????
+	// -webkit-flex: @grow @shrink @base-size; // ??
+	-ms-flex: @grow @shrink @base-size; // IE 10
+	flex: @grow @shrink @base-size;
+}
+
+.flex-grow( @grow ) {
+	// https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flexible_Box_Layout/Mixins#Flexbox_grow
+	-webkit-box-flex: @grow; // iOS 6-, Safari 3.1-6
+	-moz-box-flex: @grow; // Firefox 21-
+	// https://stackoverflow.com/questions/32605593/is-there-a-flex-grow-for-ie10
+	-ms-flex-positive: @grow; // IE 10
+	-webkit-flex-grow: @grow; // ??
+	flex-grow: @grow;
+}
+
+.flex-order( @order ) when not ( order = none ) {
+	// https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flexible_Box_Layout/Mixins#Flexbox_order
+	// Initial value: 0.
+	-webkit-box-ordinal-group: @order; // iOS 6-, Safari 3.1-6
+	-moz-box-ordinal-group: @order; // Firefox 21-
+	-ms-flex-order: @order; // IE 10
+	-webkit-order: @order;
+	order: @order;
+}
+
+// .flex()
+// Deprecated in MW 1.35. Use instead:
+// .flex-size( @grow, @shrink, @width ); .flex-order( @order ); .flex-justify();
+// Parameter defaults will change - don't rely on the defaults -, flex-justify() might be removed.
+// Reason: loaded function (unrelated justify) and inconsistent API:
+// the default (initial) value of @grow and @order is 0 in the specs.
+//
+// There are just a few extensions affected:
+// https://codesearch.wmflabs.org/search/?q=%5C.flex%5C(&i=nope&files=&repos=
+// Some depend on this default for @order:
+// WikibaseMediaInfo, CollaborationKit, mobileapps, ContentTranslation, MachineVision, TemplateWizard, skins/MinervaNeue, skins/Refreshed
+//
 .flex( @grow: 1, @shrink: 1, @width: auto, @order: 1 ) {
+	.internal-flex-justify();
+	.flex-size( @grow, @shrink, @width, row );
+	.flex-order( @order );
+}
+
+// INTERNAL, use instead: .justify-content( space-between );
+// Kept for backward-compatibility of .flex()
+.internal-flex-justify() {
 	// For 2009/2012 spec alignment consistency with current default
 	-webkit-box-pack: justify; // iOS 6-, Safari 3.1-6
 	-moz-box-pack: justify; // Firefox 21-
 	-ms-flex-pack: justify; // IE 10 (2012 spec)
 	justify-content: space-between; // Current default
-
-	// 2009 spec only supports 'flexible' as opposed to grow (flexPositive)
-	// and shrink (flexNegative); default to grow value
-	-webkit-box-flex: @grow; // iOS 6-, Safari 3.1-6
-	-moz-box-flex: @grow; // Firefox 21-
-	width: @width; // Fallback for flex-basis
-	-ms-flex: @grow @shrink @width; // IE 10
-	flex: @grow @shrink @width;
-	-webkit-box-ordinal-group: @order; // iOS 6-, Safari 3.1-6
-	-moz-box-ordinal-group: @order; // Firefox 21-
-	-ms-flex-order: @order; // IE 10
-	order: @order;
 }
 
 // “Clearfix Reloaded” Mixin
@@ -164,6 +238,8 @@
 // In future we might replace the `&:after` pseudo-element with
 // `display: flow-root;` altogether.
 // Support: Firefox 3.5+, Safari 4+, Chrome, Opera 15+, IE 8+
+// Research and implementation: @Demian
+//
 .mixin-clearfix( @collapse: true ) {
 	&:after {
 		clear: both;
