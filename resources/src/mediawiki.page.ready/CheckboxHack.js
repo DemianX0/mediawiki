@@ -301,30 +301,33 @@ function bindDismissOnFocusLoss( self ) {
 }
 
 /**
- * Free all set listeners.
+ * Unregister all listeners.
  *
- * @param {Window} window
- * @param {HTMLInputElement} checkbox The underlying hidden checkbox that controls target
- *   visibility.
- * @param {HTMLElement} button The visible label icon associated with the checkbox. This button
- *   toggles the state of the underlying checkbox.
+ * @param {CheckboxHack} self
  * @param {CheckboxHackListeners} listeners
  * @return {void}
  * @ignore
  */
-function unbind( window, checkbox, button, listeners ) {
-	if ( listeners.onDismissOnFocusLoss ) {
-		window.removeEventListener( 'focusin', listeners.onDismissOnFocusLoss );
+function unbind( self, listeners ) {
+	/**
+	 * @param {EventTarget} target
+	 * @param {string} type
+	 * @param {Function} [listener]
+	 */
+	function removeListener( target, type, listener ) {
+		// Individual listeners can be undefined. Browsers simly avoid that call,
+		// but typescript is strict about null safety.
+		if ( listener ) {
+			target.removeEventListener( type, listener );
+		}
 	}
-	if ( listeners.onDismissOnClickOutside ) {
-		window.removeEventListener( 'click', listeners.onDismissOnClickOutside );
-	}
-	if ( listeners.onToggleOnClick ) {
-		button.removeEventListener( 'click', listeners.onToggleOnClick );
-	}
-	if ( listeners.onUpdateAriaExpandedOnInput ) {
-		checkbox.removeEventListener( 'input', listeners.onUpdateAriaExpandedOnInput );
-	}
+
+	/* eslint-disable no-multi-spaces */
+	removeListener( self.checkbox, 'input', listeners.onUpdateAriaExpandedOnInput );
+	removeListener( self.button, 'click',   listeners.onToggleOnClick );
+	removeListener( self.window, 'click',   listeners.onDismissOnClickOutside );
+	removeListener( self.window, 'focusin', listeners.onDismissOnFocusLoss );
+	/* eslint-enable no-multi-spaces */
 }
 
 /**
@@ -360,6 +363,9 @@ function unbind( window, checkbox, button, listeners ) {
  *       or 'click' / 'focusin' event outside the `autoHideElement`.
  */
 function CheckboxHack( window, checkbox, button, options, onChange ) {
+	/* eslint-disable one-var */
+	/** @type {CheckboxHack} */
+	var self = this;
 	/* TODO JsDoc: @type {CheckboxHackListeners} */
 	/** @type {Object} */
 	var listeners = {};
@@ -373,7 +379,7 @@ function CheckboxHack( window, checkbox, button, options, onChange ) {
 	this.options = options = options || {};
 	this.onChange = onChange;
 	this.unbind = function checkboxHackUnbind() {
-		unbind( window, checkbox, button, listeners );
+		unbind( self, listeners );
 		listeners = {}; // Release references.
 	};
 
