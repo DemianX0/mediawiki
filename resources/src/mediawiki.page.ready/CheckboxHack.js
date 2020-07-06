@@ -146,8 +146,8 @@
  * Checkbox hack listener state.
  *
  * @class {Object} CheckboxHackListeners
- * @property {Function} [onUpdateAriaExpandedOnInput]
- * @property {Function} [onToggleOnClick]
+ * @property {Function} [onStateChange]
+ * @property {Function} [onButtonClick]
  * @property {Function} [onKeydownSpaceEnter]
  * @property {Function} [onKeyupSpaceEnter]
  * @property {Function} [onDismissOnClickOutside]
@@ -267,11 +267,13 @@ function bindHideOnOutsideEvent( self, listeners ) {
  * @return {void}
  * @ignore
  */
-function bindHandleStateChange( self ) {
-	var listener = handleStateChange.bind( undefined, self );
-	// Whenever the checkbox state changes, update the `aria-expanded` state.
+function bindHandleStateChange( self, listeners ) {
+	var listener = handleStateChange.bind( null, self );
+	// https://caniuse.com/#feat=input-event
+	// https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/input_event#Browser_compatibility
+	// https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/change_event#Browser_compatibility
 	self.checkbox.addEventListener( 'input', listener );
-	return { onUpdateAriaExpandedOnInput: listener };
+	listeners.onStateChange = listener;
 }
 
 /**
@@ -330,18 +332,25 @@ function bindToggleOnSpaceEnter( self, listeners ) {
  * Manually change the checkbox state to avoid a focus change when using a pointing device.
  *
  * @param {CheckboxHack} self
- * @return {CheckboxHackListeners}
+ * @param {CheckboxHackListeners} listeners
+ * @return {void}
  * @ignore
  */
-function bindToggleOnClick( self ) {
-	function listener( event ) {
+function bindButtonClick( self, listeners ) {
+	/**
+	 * @param {Event} event
+	 * @return {void}
+	 * @ignore
+	 */
+	function handleButtonClick( event ) {
 		// Do not allow the browser to handle the checkbox. Instead, manually toggle it which does
 		// not alter focus.
 		event.preventDefault();
 		setCheckedState( self, !self.checkbox.checked, event );
 	}
-	self.button.addEventListener( 'click', listener, true );
-	return { onToggleOnClick: listener };
+
+	self.button.addEventListener( 'click', handleButtonClick, true );
+	listeners.onButtonClick = handleButtonClick;
 }
 
 /**
@@ -367,8 +376,8 @@ function unbind( self, listeners ) {
 	}
 
 	/* eslint-disable no-multi-spaces */
-	removeListener( self.checkbox, 'input', listeners.onUpdateAriaExpandedOnInput );
-	removeListener( self.button, 'click',   listeners.onToggleOnClick );
+	removeListener( self.checkbox, 'input', listeners.onStateChange );
+	removeListener( self.button, 'click',   listeners.onButtonClick );
 	removeListener( self.button, 'keydown', listeners.onKeydownSpaceEnter );
 	removeListener( self.button, 'keyup',   listeners.onKeyupSpaceEnter );
 	removeListener( self.window, 'click',   listeners.onDismissOnClickOutside );
@@ -429,9 +438,9 @@ function CheckboxHack( window, checkbox, button, options, onChange ) {
 		listeners = {}; // Release references.
 	};
 
-	listeners.onUpdateAriaExpandedOnInput = bindHandleStateChange( this ).onUpdateAriaExpandedOnInput;
+	bindHandleStateChange( this, listeners );
 	if ( !options.noClickHandler ) {
-		listeners.onToggleOnClick = bindToggleOnClick( this ).onToggleOnClick;
+		bindButtonClick( this, listeners );
 	}
 	if ( !options.noKeyHandler ) {
 		bindToggleOnSpaceEnter( this, listeners );
