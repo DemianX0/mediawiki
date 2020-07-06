@@ -224,17 +224,37 @@ function containsEventTarget( self, target ) {
 }
 
 /**
- * Dismiss the target when event is outside the checkbox, button, and target.
- * In simple terms this closes the target (menu, typically) when clicking somewhere else.
+ * Hide the controlled element when clicking or focusing outside the
+ * checkbox, button and controlled element. In simple terms this closes
+ * the target (menu, typically) when clicking or TABing somewhere else.
  *
  * @param {CheckboxHack} self
- * @param {Event} event
+ * @param {CheckboxHackListeners} listeners
  * @return {void}
  * @ignore
  */
-function dismissIfExternalEventTarget( self, event ) {
-	if ( event.target instanceof Node && !containsEventTarget( self, event.target ) ) {
-		setCheckedState( self, false, event );
+function bindHideOnOutsideEvent( self, listeners ) {
+	/**
+	 * @param {Event} event
+	 * @return {void}
+	 * @ignore
+	 */
+	function handleHideOnOutsideEvent( event ) {
+		if ( self.checkbox.checked && event.target instanceof Node && !containsEventTarget( self, event.target ) ) {
+			setCheckedState( self, false, event );
+		}
+	}
+
+	if ( !self.options.noDismissOnClickOutside ) {
+		window.addEventListener( 'click', handleHideOnOutsideEvent, true );
+		listeners.onDismissOnClickOutside = handleHideOnOutsideEvent;
+	}
+	if ( !self.options.noDismissOnFocusLoss ) {
+		// If focus is given to any element outside the target, dismiss the target.
+		// Setting a focusout listener on the target would be preferable,
+		// but that interferes with the click listener.
+		window.addEventListener( 'focusin', handleHideOnOutsideEvent, true );
+		listeners.onDismissOnFocusLoss = handleHideOnOutsideEvent;
 	}
 }
 
@@ -322,36 +342,6 @@ function bindToggleOnClick( self ) {
 	}
 	self.button.addEventListener( 'click', listener, true );
 	return { onToggleOnClick: listener };
-}
-
-/**
- * Dismiss the target when clicking elsewhere and update the `aria-expanded` attribute based on
- * checkbox state (target visibility).
- *
- * @param {CheckboxHack} self
- * @return {CheckboxHackListeners}
- * @ignore
- */
-function bindDismissOnClickOutside( self ) {
-	var listener = dismissIfExternalEventTarget.bind( undefined, self );
-	self.window.addEventListener( 'click', listener, true );
-	return { onDismissOnClickOutside: listener };
-}
-
-/**
- * Dismiss the target when focusing elsewhere and update the `aria-expanded` attribute based on
- * checkbox state (target visibility).
- *
- * @param {CheckboxHack} self
- * @return {CheckboxHackListeners}
- * @ignore
- */
-function bindDismissOnFocusLoss( self ) {
-	// If focus is given to any element outside the target, dismiss the target. Setting a focusout
-	// listener on the target would be preferable, but this interferes with the click listener.
-	var listener = dismissIfExternalEventTarget.bind( undefined, self );
-	self.window.addEventListener( 'focusin', listener, true );
-	return { onDismissOnFocusLoss: listener };
 }
 
 /**
@@ -447,8 +437,7 @@ function CheckboxHack( window, checkbox, button, options, onChange ) {
 		bindToggleOnSpaceEnter( this, listeners );
 	}
 	if ( options.autoHideElement ) {
-		listeners.onDismissOnClickOutside = bindDismissOnClickOutside( this ).onDismissOnClickOutside;
-		listeners.onDismissOnFocusLoss = bindDismissOnFocusLoss( this ).onDismissOnFocusLoss;
+		bindHideOnOutsideEvent( this, listeners );
 	}
 }
 
