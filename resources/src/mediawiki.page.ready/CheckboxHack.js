@@ -148,6 +148,8 @@
  * @class {Object} CheckboxHackListeners
  * @property {Function} [onUpdateAriaExpandedOnInput]
  * @property {Function} [onToggleOnClick]
+ * @property {Function} [onKeydownSpaceEnter]
+ * @property {Function} [onKeyupSpaceEnter]
  * @property {Function} [onDismissOnClickOutside]
  * @property {Function} [onDismissOnFocusLoss]
  * @ignore
@@ -253,6 +255,58 @@ function bindHandleStateChange( self ) {
 }
 
 /**
+ * Manually change the checkbox state when the button is focused and SPACE or ENTER is pressed.
+ *
+ * Buttons trigger on ENTER 'keydown' and SPACE 'keyup' events. That pattern is followed.
+ * The 'keydown' event is fired repeatedly while a key is pressed, therefore
+ * only the first ENTER 'keydown' event triggers a state change.
+ *
+ * @param {CheckboxHack} self
+ * @param {CheckboxHackListeners} listeners
+ * @return {void}
+ * @ignore
+ */
+function bindToggleOnSpaceEnter( self, listeners ) {
+	/** @type {boolean} */
+	var enterPressed = false;
+
+	function handleKeydownSpaceEnter( /** @type {Event} */ event ) {
+		/* Not yet for Safari 5-10, Android 4.1-4.4.4:
+		// https://caniuse.com/#feat=keyboardevent-key
+		if ( event.key !== ' ' && event.key !== 'Enter' ) {
+		*/
+		// Only catch SPACE and ENTER.
+		if ( !( event instanceof KeyboardEvent ) || event.which !== 32 && event.which !== 13 ) {
+			return;
+		}
+		// Do not allow the browser to page down.
+		event.preventDefault();
+		if ( !enterPressed && event.which === 13 ) { // first ENTER
+			setCheckedState( self, !self.checkbox.checked, event );
+			enterPressed = true;
+		}
+	}
+
+	function handleKeyupSpaceEnter( /** @type {Event} */ event ) {
+		// Only handle SPACE and ENTER.
+		if ( !( event instanceof KeyboardEvent ) || event.which !== 32 && event.which !== 13 ) {
+			return;
+		}
+		event.preventDefault();
+		if ( event.which === 13 ) { // ENTER
+			enterPressed = false;
+		} else if ( event.which === 32 ) { // SPACE
+			setCheckedState( self, !self.checkbox.checked, event );
+		}
+	}
+
+	self.button.addEventListener( 'keydown', handleKeydownSpaceEnter, true );
+	self.button.addEventListener( 'keyup', handleKeyupSpaceEnter, true );
+	listeners.onKeydownSpaceEnter = handleKeydownSpaceEnter;
+	listeners.onKeyupSpaceEnter = handleKeyupSpaceEnter;
+}
+
+/**
  * Manually change the checkbox state to avoid a focus change when using a pointing device.
  *
  * @param {CheckboxHack} self
@@ -325,6 +379,8 @@ function unbind( self, listeners ) {
 	/* eslint-disable no-multi-spaces */
 	removeListener( self.checkbox, 'input', listeners.onUpdateAriaExpandedOnInput );
 	removeListener( self.button, 'click',   listeners.onToggleOnClick );
+	removeListener( self.button, 'keydown', listeners.onKeydownSpaceEnter );
+	removeListener( self.button, 'keyup',   listeners.onKeyupSpaceEnter );
 	removeListener( self.window, 'click',   listeners.onDismissOnClickOutside );
 	removeListener( self.window, 'focusin', listeners.onDismissOnFocusLoss );
 	/* eslint-enable no-multi-spaces */
@@ -386,6 +442,9 @@ function CheckboxHack( window, checkbox, button, options, onChange ) {
 	listeners.onUpdateAriaExpandedOnInput = bindHandleStateChange( this ).onUpdateAriaExpandedOnInput;
 	if ( !options.noClickHandler ) {
 		listeners.onToggleOnClick = bindToggleOnClick( this ).onToggleOnClick;
+	}
+	if ( !options.noKeyHandler ) {
+		bindToggleOnSpaceEnter( this, listeners );
 	}
 	if ( options.autoHideElement ) {
 		listeners.onDismissOnClickOutside = bindDismissOnClickOutside( this ).onDismissOnClickOutside;
