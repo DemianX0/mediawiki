@@ -187,6 +187,11 @@ class WebRequest {
 				$router->add( $articlePaths, [ 'action' => '$key' ] );
 			}
 
+			global $wgExtraRouterPaths;
+			foreach ( ( $wgExtraRouterPaths ?? [] ) as $pathPattern => $params ) {
+				$router->add( $pathPattern, $params );
+			}
+
 			global $wgVariantArticlePath;
 			if ( $wgVariantArticlePath ) {
 				$router->validateRoute( $wgVariantArticlePath, 'wgVariantArticlePath' );
