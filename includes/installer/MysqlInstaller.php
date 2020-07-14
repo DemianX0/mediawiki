@@ -48,7 +48,7 @@ class MysqlInstaller extends DatabaseInstaller {
 		'_InstallUser' => 'root',
 	];
 
-	public $supportedEngines = [ 'InnoDB' ];
+	public $supportedEngines = [ 'InnoDB', 'MyISAM' ];
 
 	public static $minimumVersion = '5.5.8';
 	protected static $notMinimumVersionMessage = 'config-mysql-old';
@@ -604,7 +604,7 @@ class MysqlInstaller extends DatabaseInstaller {
 	 */
 	protected function getTableOptions() {
 		$options = [];
-		if ( $this->getVar( '_MysqlEngine' ) !== null ) {
+		if ( $this->getVar( '_MysqlEngine' ) ) {
 			$options[] = "ENGINE=" . $this->getVar( '_MysqlEngine' );
 		}
 		if ( $this->getVar( '_MysqlCharset' ) !== null ) {

@@ -1941,11 +1941,11 @@ abstract class Database implements IDatabase, IMaintainableDatabase, LoggerAware
 	}
 
 	public function select(
-		$table, $vars, $conds = '', $fname = __METHOD__, $options = [], $join_conds = []
+		$table, $vars, $conds = '', $fname = __METHOD__, $options = [], $join_conds = [], $flags = self::QUERY_NORMAL
 	) {
 		$sql = $this->selectSQLText( $table, $vars, $conds, $fname, $options, $join_conds );
 
-		return $this->query( $sql, $fname, self::QUERY_CHANGE_NONE );
+		return $this->query( $sql, $fname, $flags | self::QUERY_CHANGE_NONE );
 	}
 
 	/**
@@ -2040,17 +2040,17 @@ abstract class Database implements IDatabase, IMaintainableDatabase, LoggerAware
 	}
 
 	public function selectRow( $table, $vars, $conds, $fname = __METHOD__,
-		$options = [], $join_conds = []
+		$options = [], $join_conds = [], $flags = self::QUERY_NORMAL
 	) {
 		$options = (array)$options;
 		$options['LIMIT'] = 1;
 
-		$res = $this->select( $table, $vars, $conds, $fname, $options, $join_conds );
-		if ( $res === false ) {
+		$res = $this->select( $table, $vars, $conds, $fname, $options, $join_conds, $flags );
+		if ( $res === false && !$this->fieldHasBit( $flags, self::QUERY_SILENCE_ERRORS ) ) {
 			throw new DBUnexpectedError( $this, "Got false from select()" );
 		}
 
-		if ( !$this->numRows( $res ) ) {
+		if ( !$res || !$this->numRows( $res ) ) {
 			return false;
 		}
 

@@ -482,10 +482,17 @@ abstract class DatabaseMysqlBase extends Database {
 					'binlog_format' => '@@binlog_format',
 				],
 				[],
-				__METHOD__
+				__METHOD__,
+				[],
+				[],
+				self::QUERY_SILENCE_ERRORS
 			);
 		}
 
+		$this->replicationInfoRow = $this->replicationInfoRow || [
+			'innodb_autoinc_lock_mode' => -1,
+			'binlog_format' => ''
+		];
 		return $this->replicationInfoRow;
 	}
 
