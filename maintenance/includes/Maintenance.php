@@ -739,7 +739,7 @@ abstract class Maintenance {
 		# Abort if called from a web server
 		# wfIsCLI() is not available yet
 		if ( PHP_SAPI !== 'cli' && PHP_SAPI !== 'phpdbg' ) {
-			$this->fatalError( 'This script must be run from the command line' );
+			//$this->fatalError( 'This script must be run from the command line' );
 		}
 
 		if ( $IP === null ) {
@@ -749,7 +749,7 @@ abstract class Maintenance {
 
 		# Make sure we can handle script parameters
 		if ( !defined( 'HPHP_VERSION' ) && !ini_get( 'register_argc_argv' ) ) {
-			$this->fatalError( 'Cannot get command line arguments, register_argc_argv is set to false' );
+			//$this->fatalError( 'Cannot get command line arguments, register_argc_argv is set to false' );
 		}
 
 		// Send PHP warnings and errors to stderr instead of stdout.
@@ -982,8 +982,17 @@ abstract class Maintenance {
 		}
 
 		global $argv;
-		$this->mSelf = $argv[0];
-		$this->loadWithArgv( array_slice( $argv, 1 ) );
+		if ( $argv ) {
+			$this->mSelf = $argv[0];
+			$this->loadWithArgv( array_slice( $argv, 1 ) );
+		} else {
+			$this->mSelf = __FILE__;
+			$this->loadWithArgv( [] ); // Not trusting query params.
+			/*
+			$queryArg = $_SERVER['arg'] ?? [];
+			$this->loadWithArgv( is_array( $queryArg ) ? $queryArg : [ $queryArg ] );
+			*/
+		}
 	}
 
 	/**
@@ -1269,6 +1278,9 @@ abstract class Maintenance {
 		} elseif ( defined( "MW_CONFIG_FILE" ) ) {
 			$settingsFile = MW_CONFIG_FILE;
 		} else {
+			if ( !$IP ) {
+				$IP = dirname( dirname( __DIR__ ) );
+			}
 			$settingsFile = "$IP/LocalSettings.php";
 		}
 		if ( isset( $this->mOptions['wiki'] ) ) {
@@ -1285,7 +1297,7 @@ abstract class Maintenance {
 
 		if ( !is_readable( $settingsFile ) ) {
 			$this->fatalError( "A copy of your installation's LocalSettings.php\n" .
-				"must exist and be readable in the source directory.\n" .
+				"must exist and be readable at '$settingsFile'.\n" .
 				"Use --conf to specify it." );
 		}
 		$wgCommandLineMode = true;
