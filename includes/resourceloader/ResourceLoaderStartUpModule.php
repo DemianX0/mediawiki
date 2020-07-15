@@ -309,7 +309,8 @@ class ResourceLoaderStartUpModule extends ResourceLoaderModule {
 	 * @return string localStorage item key for JavaScript
 	 */
 	private function getStoreKey() : string {
-		return 'MediaWikiModuleStore:' . $this->getConfig()->get( 'DBname' );
+		global $wgCookiePrefix;
+		return 'MediaWikiModuleStore:' . $wgCookiePrefix;
 	}
 
 	/**
