@@ -2160,6 +2160,7 @@ abstract class Skin extends ContextSource {
 				'href',
 				'class',
 				'text',
+				'text-wrapper',
 				'dir',
 				'data',
 				'exists',
@@ -2232,8 +2233,13 @@ abstract class Skin extends ContextSource {
 
 		$html = htmlspecialchars( $text );
 
-		if ( isset( $options['text-wrapper'] ) ) {
-			$wrapper = $options['text-wrapper'];
+		$wrapper = $options['text-wrapper'] ?? $item['text-wrapper'] ?? null;
+		$item['text-wrapper'] = null;
+		if ( !$html ) {
+			// Don't create an empty span.
+		} elseif ( is_string( $wrapper ) ) {
+			$html = Html::rawElement( $wrapper, null, $html );
+		} elseif ( $wrapper ) {
 			if ( isset( $wrapper['tag'] ) ) {
 				$wrapper = [ $wrapper ];
 			}
