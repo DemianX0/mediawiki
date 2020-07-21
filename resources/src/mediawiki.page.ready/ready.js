@@ -113,5 +113,8 @@ if (
 }
 
 module.exports = {
-	checkboxHack: require( './checkboxHack.js' )
+	CheckboxHack: require( './CheckboxHack.js' )
 };
+
+// FIXME: Remove after Vector is migrated to `CheckboxHack`.
+module.exports.checkboxHack = module.exports.CheckboxHack;
