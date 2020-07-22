@@ -32,6 +32,7 @@
 	 */
 	function updateWatchLink( $link, action, state, expiry ) {
 		var msgKey, $li, otherAction, expiryDate,
+			$textSpan,
 			tooltipAction = action,
 			daysLeftExpiry = null,
 			currentDate = new Date();
@@ -75,14 +76,17 @@
 			}
 		}
 
+		// Change the first <span> if exists, otherwise the link itself.
+		$textSpan = $( $link.children( 'span' )[0] || $link );
+		// The following messages can be used here:
+		// * watch
+		// * watching
+		// * unwatch
+		// * unwatch-expiring
+		// * unwatching
+		$textSpan.text( mw.msg( msgKey ) );
+
 		$link
-			// The following messages can be used here:
-			// * watch
-			// * watching
-			// * unwatch
-			// * unwatch-expiring
-			// * unwatching
-			.text( mw.msg( msgKey ) )
 			.attr( 'title', mw.msg( 'tooltip-ca-' + tooltipAction, daysLeftExpiry ) )
 			.updateTooltipAccessKeys()
 			.attr( 'href', mw.util.getUrl( pageTitle, { action: action } ) );
