@@ -1470,7 +1470,7 @@ return [
 		'packageFiles' => [
 			'ready.js',
 			'checkboxShift.js',
-			'checkboxHack.js',
+			'CheckboxHack.js',
 			[ 'name' => 'config.json', 'callback' => function (
 				ResourceLoaderContext $context,
 				Config $config
