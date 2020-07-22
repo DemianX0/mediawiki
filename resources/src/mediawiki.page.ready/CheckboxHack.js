@@ -124,6 +124,7 @@
  * Checkbox hack initialization options type.
  *
  * @class {Object} CheckboxHackOptions
+ * @property {boolean} [allowFocusOnClick]
  * @property {boolean} [noClickHandler]
  * @property {boolean} [noKeyHandler]
  * @property {boolean} [noDismissOnClickOutside]
@@ -147,6 +148,7 @@
  *
  * @class {Object} CheckboxHackListeners
  * @property {Function} [onStateChange]
+ * @property {Function} [onButtonMouseDown]
  * @property {Function} [onButtonClick]
  * @property {Function} [onKeydownSpaceEnter]
  * @property {Function} [onKeyupSpaceEnter]
@@ -329,7 +331,36 @@ function bindToggleOnSpaceEnter( self, listeners ) {
 }
 
 /**
- * Manually change the checkbox state to avoid a focus change when using a pointing device.
+ * Handle 'mousedown' event to avoid a focus change when using a pointing device.
+ *
+ * But allow focus change if there is a focused element already
+ * and the click will result in opening the controlled element.
+ * Note: `:not( :focus-visible )` selector will replace this once standardized.
+ *
+ * @param {CheckboxHack} self
+ * @param {CheckboxHackListeners} listeners
+ * @return {void}
+ * @ignore
+ */
+function bindButtonMouseDown( self, listeners ) {
+	/**
+	 * @param {Event} event
+	 * @return {void}
+	 * @ignore
+	 */
+	function handleButtonMouseDown( event ) {
+		if ( !document.activeElement || document.activeElement === document.body || self.checkbox.checked ) {
+			// Do not allow the browser to change focus.
+			event.preventDefault();
+		}
+	}
+
+	self.button.addEventListener( 'mousedown', handleButtonMouseDown, true );
+	listeners.onButtonMouseDown = handleButtonMouseDown;
+}
+
+/**
+ * Change the checkbox state when the button is clicked.
  *
  * @param {CheckboxHack} self
  * @param {CheckboxHackListeners} listeners
@@ -353,7 +384,7 @@ function bindButtonClick( self, listeners ) {
 		}
 	}
 
-	self.button.addEventListener( 'click', handleButtonClick, true );
+	self.button.addEventListener( 'click', handleButtonClick );
 	listeners.onButtonClick = handleButtonClick;
 }
 
@@ -381,6 +412,7 @@ function unbind( self, listeners ) {
 
 	/* eslint-disable no-multi-spaces */
 	removeListener( self.checkbox, 'input', listeners.onStateChange );
+	removeListener( self.button, 'mousedown', listeners.onButtonMouseDown );
 	removeListener( self.button, 'click',   listeners.onButtonClick );
 	removeListener( self.button, 'keydown', listeners.onKeydownSpaceEnter );
 	removeListener( self.button, 'keyup',   listeners.onKeyupSpaceEnter );
@@ -398,7 +430,7 @@ function unbind( self, listeners ) {
  * When tapping the button itself, clears the focus outline.
  *
  * This function calls the other bind* functions and is the only expected interaction.
- * Customization options: noClickHandler, noKeyHandler, autoHideElement.
+ * Customization options: allowFocusOnClick, noClickHandler, noKeyHandler, autoHideElement.
  *
  * @constructor {Object} {CheckboxHack}
  * @param {Window}               window      Page context.
@@ -410,6 +442,7 @@ function unbind( self, listeners ) {
  * @param {Function}             [onChange]  Event callback called when the checkbox state changes.
  * @ignore
  */
+/*   [options.allowFocusOnClick]   Set true to disable preventing focus when clicked.
 /*   [options.noClickHandler]   Set true to disable JS handling of click/touch on the checkbox.
  *     Touch event will focus the button.
  *   [options.noKeyHandler]     Set true to disable SPACE and ENTER key handling.
@@ -443,7 +476,10 @@ function CheckboxHack( window, checkbox, button, options, onChange ) {
 	};
 
 	bindHandleStateChange( this, listeners );
-	if ( !options.noClickHandler ) {
+	if ( !options.allowFocusOnClick ) {
+		bindButtonMouseDown( this, listeners );
+	}
+	if ( !options.noClickHandler && self.button !== self.checkbox ) {
 		bindButtonClick( this, listeners );
 	}
 	if ( !options.noKeyHandler ) {
