@@ -327,7 +327,7 @@ util = {
 		$portlet = $( portlet );
 		$portlet.removeClass( 'emptyPortlet' );
 
-		item = $( '<li>' ).append( link )[ 0 ];
+		item = $( '<li class="collapsible">' ).append( link )[ 0 ];
 
 		if ( id ) {
 			item.id = id;
@@ -349,10 +349,14 @@ util = {
 			}
 		}
 
+		if ( nextnode === 'first' || nextnode == null && portletId === 'p-personal' ) {
+			nextnode = ':first-child';
+		}
+
 		if ( nextnode && ( typeof nextnode === 'string' || nextnode.nodeType || nextnode.jquery ) ) {
 			// eslint-disable-next-line no-jquery/variable-pattern
-			nextnode = $( ul ).find( nextnode );
-			if ( nextnode.length === 1 && nextnode[ 0 ].parentNode === ul ) {
+			nextnode = $( ul ).children( nextnode );
+			if ( nextnode.length ) {
 				// Insertion point: Before nextnode
 				nextnode.before( item );
 				next = true;
