@@ -423,9 +423,8 @@ class RequestContext implements IContextSource, MutableContext {
 	 */
 	public function getSkin() {
 		if ( $this->skin === null ) {
-			$skin = null;
-			Hooks::runner()->onRequestContextCreateSkin( $this, $skin );
 			$factory = MediaWikiServices::getInstance()->getSkinFactory();
+			Hooks::runner()->onRequestContextCreateSkin( $this, $skin );
 
 			if ( $skin instanceof Skin ) {
 				// The hook provided a skin object
@@ -438,9 +437,9 @@ class RequestContext implements IContextSource, MutableContext {
 			} else {
 				// No hook override, go through normal processing
 				if ( !in_array( 'skin', $this->getConfig()->get( 'HiddenPrefs' ) ) ) {
-					$userSkin = $this->getUser()->getOption( 'skin' );
-					// Optimisation: Avoid slow getVal(), this isn't user-generated content.
-					$userSkin = $this->getRequest()->getRawVal( 'useskin', $userSkin );
+					$userSkin = $_GET[ 'useskin' ] ?? ''
+						?: ( $this->getUser()->isLoggedIn() ? $_COOKIE[ 'useskin' ] ?? '' : '' )
+						?: $this->getUser()->getOption( 'skin' );
 				} else {
 					$userSkin = $this->getConfig()->get( 'DefaultSkin' );
 				}

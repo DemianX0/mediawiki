@@ -662,6 +662,13 @@ class ApiParseTest extends ApiTestCase {
 		$this->doTestLangLinks( [ 'useskin' => 'testing' ] );
 	}
 
+	public function testLangLinksWithSkinCookie() {
+		$this->setupInterwiki();
+		$this->setupSkin();
+		$this->mergeMwGlobalArrayValue( '_COOKIE', [ 'useskin' => 'testing' ] );
+		$this->doTestLangLinks( [] );
+	}
+
 	public function testHeadItems() {
 		$res = $this->doApiRequest( [
 			'action' => 'parse',
