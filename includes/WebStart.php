@@ -64,7 +64,10 @@ function wfWebStartNoLocalSettings() {
 // (use a callback because it depends on TemplateParser)
 if ( !defined( 'MW_CONFIG_CALLBACK' ) ) {
 	if ( !defined( 'MW_CONFIG_FILE' ) ) {
-		define( 'MW_CONFIG_FILE', "$IP/LocalSettings.php" );
+		define( 'MW_CONFIG_FILE', "$IP/_appconfig.php" );
+		if ( !is_readable( MW_CONFIG_FILE ) ) {
+			define( 'MW_CONFIG_FILE', "$IP/LocalSettings.php" );
+		}
 	}
 	if ( !is_readable( MW_CONFIG_FILE ) ) {
 		define( 'MW_CONFIG_CALLBACK', 'wfWebStartNoLocalSettings' );
