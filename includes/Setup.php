@@ -138,7 +138,10 @@ if ( defined( 'MW_CONFIG_CALLBACK' ) ) {
 	call_user_func( MW_CONFIG_CALLBACK );
 } else {
 	if ( !defined( 'MW_CONFIG_FILE' ) ) {
-		define( 'MW_CONFIG_FILE', "$IP/LocalSettings.php" );
+		define( 'MW_CONFIG_FILE', $IP . '/_appconfig.php' );
+		if ( !is_readable( MW_CONFIG_FILE ) ) {
+			define( 'MW_CONFIG_FILE', $IP . '/LocalSettings.php' );
+		}
 	}
 	require_once MW_CONFIG_FILE;
 }
@@ -475,7 +478,7 @@ foreach ( LanguageCode::getNonstandardLanguageCodeMapping() as $code => $bcp47 )
 
 if ( $wgInvalidateCacheOnLocalSettingsChange ) {
 	Wikimedia\suppressWarnings();
-	$wgCacheEpoch = max( $wgCacheEpoch, gmdate( 'YmdHis', filemtime( "$IP/LocalSettings.php" ) ) );
+	$wgCacheEpoch = max( $wgCacheEpoch, gmdate( 'YmdHis', filemtime( MW_CONFIG_FILE ) ) );
 	Wikimedia\restoreWarnings();
 }
 
