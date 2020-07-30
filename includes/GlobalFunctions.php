@@ -2646,7 +2646,7 @@ function wfTransactionalTimeLimit() {
 
 	$timeLimit = (int)ini_get( 'max_execution_time' );
 	// Note that CLI scripts use 0
-	if ( $timeLimit > 0 && $wgTransactionalTimeLimit > $timeLimit ) {
+	if ( $timeLimit > 0 && $wgTransactionalTimeLimit > $timeLimit && function_exists( 'set_time_limit' ) ) {
 		set_time_limit( $wgTransactionalTimeLimit );
 	}
 
@@ -2913,5 +2913,5 @@ function wfArrayPlus2d( array $baseArray, array $newValues ) {
  */
 function wfGetRusage() {
 	wfDeprecated( __FUNCTION__, '1.35' );
-	return getrusage( 0 /* RUSAGE_SELF */ );
+	return !function_exists( 'getrusage' ) ? false : getrusage( 0 /* RUSAGE_SELF */ );
 }
