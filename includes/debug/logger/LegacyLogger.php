@@ -106,20 +106,34 @@ class LegacyLogger extends AbstractLogger {
 	private $isDB;
 
 	/**
+	 * $wgDebugLogFile or $wgErrorLogFile
+	 *
+	 * @var string
+	 */
+	private $fileName;
+
+	/**
 	 * @param string $channel
 	 */
 	public function __construct( $channel ) {
-		global $wgDebugLogFile, $wgDBerrorLog, $wgDebugLogGroups, $wgDebugToolbar;
+		global $wgDebugLogFile, $wgErrorLogFile, $wgDBerrorLog, $wgDebugLogGroups, $wgDebugToolbar;
 
 		$this->channel = $channel;
 		$this->isDB = isset( self::$dbChannels[$channel] );
 
+		if ( $wgErrorLogFile ) {
+			// Log all errors if there is an error log file
+			$wgDebugLogGroups['error']['level'] = LogLevel::NOTICE;
+			$wgDebugLogGroups['error']['destination'] = $wgErrorLogFile;
+		}
+
 		// Calculate minimum level, duplicating some of the logic from log() and shouldEmit()
-		if ( $wgDebugLogFile != '' || $wgDebugToolbar ) {
+		if ( $wgDebugLogFile || $wgDebugToolbar ) {
 			// Log all messages if there is a debug log file or debug toolbar
 			$this->minimumLevel = self::LEVEL_DEBUG;
+			$this->fileName = $wgDebugLogFile;
 		} elseif ( isset( $wgDebugLogGroups[$channel] ) ) {
-			$logConfig = $wgDebugLogGroups[$channel];
+			$logConfig = &$wgDebugLogGroups[$channel];
 			// Log messages if the config is set, according to the configured level
 			if ( is_array( $logConfig ) && isset( $logConfig['level'] ) ) {
 				$this->minimumLevel = self::$levelMapping[$logConfig['level']];
@@ -196,7 +210,7 @@ class LegacyLogger extends AbstractLogger {
 
 		if ( self::shouldEmit( $effectiveChannel, $message, $level, $context ) ) {
 			$text = self::format( $effectiveChannel, $message, $context );
-			$destination = self::destination( $effectiveChannel, $message, $context );
+			$destination = $this->destination( $effectiveChannel, $message, $context );
 			self::emit( $text, $destination );
 		}
 		if ( !isset( $context['private'] ) || !$context['private'] ) {
@@ -232,10 +246,10 @@ class LegacyLogger extends AbstractLogger {
 			// been specified. Checked explicitly so that 'private' flagged
 			// messages are not discarded by unset $wgDebugLogGroups channel
 			// handling below.
-			$shouldEmit = $wgDebugLogFile != '';
+			$shouldEmit = !!$wgDebugLogFile;
 
 		} elseif ( isset( $wgDebugLogGroups[$channel] ) ) {
-			$logConfig = $wgDebugLogGroups[$channel];
+			$logConfig = &$wgDebugLogGroups[$channel];
 
 			if ( is_array( $logConfig ) ) {
 				$shouldEmit = true;
@@ -261,7 +275,7 @@ class LegacyLogger extends AbstractLogger {
 		} else {
 			// Default return value is the same as the historic wfDebug
 			// method: emit if $wgDebugLogFile has been set.
-			$shouldEmit = $wgDebugLogFile != '';
+			$shouldEmit = !!$wgDebugLogFile;
 		}
 
 		return $shouldEmit;
@@ -470,12 +484,12 @@ class LegacyLogger extends AbstractLogger {
 	 * @param array $context
 	 * @return string
 	 */
-	protected static function destination( $channel, $message, $context ) {
+	protected function destination( $channel, $message, $context ) {
 		global $wgDebugLogFile, $wgDBerrorLog, $wgDebugLogGroups;
 
 		// Default destination is the debug log file as historically used by
 		// the wfDebug function.
-		$destination = $wgDebugLogFile;
+		$destination = $this->fileName;
 
 		if ( isset( $context['destination'] ) ) {
 			// Use destination explicitly provided in context
@@ -488,7 +502,7 @@ class LegacyLogger extends AbstractLogger {
 			$destination = $wgDBerrorLog;
 
 		} elseif ( isset( $wgDebugLogGroups[$channel] ) ) {
-			$logConfig = $wgDebugLogGroups[$channel];
+			$logConfig = &$wgDebugLogGroups[$channel];
 
 			if ( is_array( $logConfig ) ) {
 				$destination = $logConfig['destination'];
