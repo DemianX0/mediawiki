@@ -338,15 +338,19 @@ function bindToggleOnSpaceEnter( self, listeners ) {
  */
 function bindButtonClick( self, listeners ) {
 	/**
+	 * Toggle the checkbox when the button is clicked.
+	 *
 	 * @param {Event} event
 	 * @return {void}
 	 * @ignore
 	 */
 	function handleButtonClick( event ) {
-		// Do not allow the browser to handle the checkbox. Instead, manually toggle it which does
-		// not alter focus.
-		event.preventDefault();
-		setCheckedState( self, !self.checkbox.checked, event );
+		var newState = !self.checkbox.checked;
+		// Don't turn off radio buttons.
+		if ( newState || self.checkbox.getAttribute( 'type' ) !== 'radio' ) {
+			event.preventDefault();
+			setCheckedState( self, newState, event );
+		}
 	}
 
 	self.button.addEventListener( 'click', handleButtonClick, true );
