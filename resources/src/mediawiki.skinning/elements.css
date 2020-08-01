@@ -278,3 +278,8 @@ textarea {
 table.small {
 	font-size: 100%;
 }
+
+[screen-reader] {
+	position: absolute;
+	top: -9999px;
+}
