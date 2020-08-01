@@ -200,7 +200,8 @@ class LinkRenderer {
 		$url = $this->getLinkURL( $target, $query );
 		$attribs = [ 'class' => $classes ];
 		$prefixedText = $this->titleFormatter->getPrefixedText( $target );
-		if ( $prefixedText !== '' ) {
+		if ( $prefixedText !== '' && empty( $attribs['title'] ) ) {
+			//$attribs['title'] = MediaWikiServices::getInstance()->getMessageLocalizer()->msg( 'imgmultigoto', $prefixedText )->text();
 			$attribs['title'] = $prefixedText;
 		}
 
@@ -302,7 +303,7 @@ class LinkRenderer {
 	 * @param bool $isKnown
 	 * @return null|string
 	 */
-	private function buildAElement( LinkTarget $target, $text, array $attribs, $isKnown ) {
+	private function buildAElement( LinkTarget $target, $visibleText, array $attribs, $isKnown ) {
 		$ret = null;
 		if ( !$this->hookRunner->onHtmlPageLinkRendererEnd(
 			$this, $target, $isKnown, $text, $attribs, $ret )
@@ -310,7 +311,42 @@ class LinkRenderer {
 			return $ret;
 		}
 
-		return Html::rawElement( 'a', $attribs, HtmlArmor::getHtml( $text ) );
+		$visibleHtml = HtmlArmor::getHtml( $visibleText );
+		if ( $visibleText instanceof HtmlArmor ) {
+			// HTML encoded input is not expected to be used together with 'title' and 'screen-reader-text'.
+			$visibleText = null;
+		}
+		$tooltipText = $attribs['title'] ?? null;
+		$audibleText = $attribs['screen-reader-text'] ?? null;
+		if ( is_string( $audibleText ) ) {
+			unset( $attribs['screen-reader-text'] );
+		} else {
+			// $attribs['screen-reader-text'] === true means it's only for read out, but hidden otherwise
+			$audibleText = null;
+		}
+
+		// Screen reading sequence:
+		// 1. text 2. "link" 3. aria-label / title
+
+		// If the screen-reader-text is the same as the tooltip / text then ignore it.
+		if ( $audibleText === $tooltipText ?? $visibleText ) {
+			$audibleText = null;
+		}
+
+		// If the tooltip is the same as the text then ignore it.
+		if ( $tooltipText === $visibleText ) {
+			$tooltipText = null;
+		}
+
+		if ( $audibleText ) {
+			// Move 'title' and text into a child span and set $audibleText as 'title' on the root element.
+			$child = Html::rawElement( 'span', [ 'title' => $tooltipText ], $visibleHtml );
+			$attribs['title'] = $audibleText;
+		} else {
+			$child = $visibleHtml;
+		}
+
+		return Html::rawElement( 'a', $attribs, $child );
 	}
 
 	/**
