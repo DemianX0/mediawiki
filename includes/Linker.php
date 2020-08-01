@@ -2183,14 +2183,20 @@ class Linker {
 		$accesskey = null;
 		if ( in_array( 'withaccess', $options ) ) {
 			$accesskey = self::accesskey( $name );
+
 			if ( $accesskey !== false ) {
 				$attribs['screen-reader-text'] = $tooltip;
 				// Should be build the same as in jquery.accessKeyLabel.js
-				if ( $tooltip === false || $tooltip === '' ) {
-					$tooltip = wfMessage( 'brackets', $accesskey )->text();
+				$message = wfMessage( 'accesskey' );
+				if ( !$message->exists() ) {
+					$message = wfMessage( 'brackets' );
+				}
+				$keytip = $message->params( $accesskey )->text();
+				if ( !$tooltip ) {
+					$tooltip = $keytip;
 				} else {
 					$tooltip .= wfMessage( 'word-separator' )->text();
-					$tooltip .= wfMessage( 'brackets', $accesskey )->text();
+					$tooltip .= $keytip;
 				}
 			}
 		}
