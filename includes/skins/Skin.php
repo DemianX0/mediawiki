@@ -605,6 +605,7 @@ abstract class Skin extends ContextSource {
 
 		$s = '';
 		$colon = $this->msg( 'colon-separator' )->escaped();
+		$inaudibleColon = '<span aria-hidden="true">' . $colon . '</span>';
 
 		if ( !empty( $allCats['normal'] ) ) {
 			$t = $embed . implode( $pop . $embed, $allCats['normal'] ) . $pop;
@@ -618,7 +619,7 @@ abstract class Skin extends ContextSource {
 				$link = $msg->escaped();
 			}
 			$s .= '<div id="mw-normal-catlinks" class="mw-normal-catlinks">' .
-				$link . $colon . '<ul>' . $t . '</ul></div>';
+				$link . $inaudibleColon . '<ul>' . $t . '</ul></div>';
 		}
 
 		# Hidden categories
@@ -635,7 +636,7 @@ abstract class Skin extends ContextSource {
 
 			$s .= "<div id=\"mw-hidden-catlinks\" class=\"mw-hidden-catlinks$class\">" .
 				$this->msg( 'hidden-categories' )->numParams( count( $allCats['hidden'] ) )->escaped() .
-				$colon . '<ul>' . $embed . implode( $pop . $embed, $allCats['hidden'] ) . $pop . '</ul>' .
+				$inaudibleColon . '<ul>' . $embed . implode( $pop . $embed, $allCats['hidden'] ) . $pop . '</ul>' .
 				'</div>';
 		}
 
