@@ -240,6 +240,34 @@ class Html {
 		] ) );
 	}
 
+	const VALID_INPUT_TYPES = [
+		'hidden',
+		'text',
+		'password',
+		'checkbox',
+		'radio',
+		'file',
+		'submit',
+		'image',
+		'reset',
+		'button',
+
+		// HTML input types
+		'datetime',
+		'datetime-local',
+		'date',
+		'month',
+		'time',
+		'week',
+		'number',
+		'range',
+		'email',
+		'url',
+		'search',
+		'tel',
+		'color',
+	];
+
 	/**
 	 * Identical to rawElement(), but has no third parameter and omits the end
 	 * tag (and the self-closing '/' in XML mode for empty elements).
@@ -265,34 +293,7 @@ class Html {
 
 		// Remove invalid input types
 		if ( $element == 'input' ) {
-			$validTypes = [
-				'hidden',
-				'text',
-				'password',
-				'checkbox',
-				'radio',
-				'file',
-				'submit',
-				'image',
-				'reset',
-				'button',
-
-				// HTML input types
-				'datetime',
-				'datetime-local',
-				'date',
-				'month',
-				'time',
-				'week',
-				'number',
-				'range',
-				'email',
-				'url',
-				'search',
-				'tel',
-				'color',
-			];
-			if ( isset( $attribs['type'] ) && !in_array( $attribs['type'], $validTypes ) ) {
+			if ( isset( $attribs['type'] ) && !in_array( $attribs['type'], self::VALID_INPUT_TYPES ) ) {
 				unset( $attribs['type'] );
 			}
 		}
@@ -304,7 +305,7 @@ class Html {
 			$attribs['type'] = 'submit';
 		}
 
-		return "<$element" . self::expandAttributes(
+		return '<' . $element . self::expandAttributes(
 			self::dropDefaults( $element, $attribs ) ) . '>';
 	}
 

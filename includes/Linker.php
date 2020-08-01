@@ -2139,16 +2139,38 @@ class Linker {
 	 *   escape), or false for no title attribute
 	 */
 	public static function titleAttrib( $name, $options = null, array $msgParams = [] ) {
+		return self::tooltipAttribs( $name, $options, $msgParams )['title'] ?: false;
+	}
+
+	/**
+	 * Given the id of an interface element, constructs the appropriate 'title',
+	 * 'aria-label' and 'accesskey' attributes from the system messages.
+	 * (Note, this is usually the id but isn't always, because sometimes the
+	 * accesskey needs to go on a different element than the id, for reverse-compatibility, etc.)
+	 * Similar sinature to Linker::titleAttrib().
+	 *
+	 * @since 1.36.x
+	 * @param string $name Id of the element, minus prefixes.
+	 * @param string|array|null $options Null, string or array with some of the following options:
+	 *   - 'withaccess' to add an access-key hint
+	 *   - 'nonexisting' to add an accessibility hint that page does not exist
+	 * @param array $msgParams Parameters to pass to the message
+	 *
+	 * @return array of 3 attributes (which you must HTML-escape).
+	 *   The attributes can be null, but exist always.
+	 */
+	public static function tooltipAttribs( $name, $options = null, array &$msgParams = [] ) {
+		$attribs = [];
 		$message = wfMessage( "tooltip-$name", $msgParams );
 		if ( !$message->exists() ) {
-			$tooltip = false;
+			$tooltip = null;
 		} else {
 			$tooltip = $message->text();
 			# Compatibility: formerly some tooltips had [alt-.] hardcoded
 			$tooltip = preg_replace( "/ ?\[alt-.\]$/", '', $tooltip );
 			# Message equal to '-' means suppress it.
 			if ( $tooltip == '-' ) {
-				$tooltip = false;
+				$tooltip = null;
 			}
 		}
 
@@ -2157,9 +2179,12 @@ class Linker {
 		if ( in_array( 'nonexisting', $options ) ) {
 			$tooltip = wfMessage( 'red-link-title', $tooltip ?: '' )->text();
 		}
+
+		$accesskey = null;
 		if ( in_array( 'withaccess', $options ) ) {
 			$accesskey = self::accesskey( $name );
 			if ( $accesskey !== false ) {
+				$attribs['screen-reader-text'] = $tooltip;
 				// Should be build the same as in jquery.accessKeyLabel.js
 				if ( $tooltip === false || $tooltip === '' ) {
 					$tooltip = wfMessage( 'brackets', $accesskey )->text();
@@ -2170,7 +2195,9 @@ class Linker {
 			}
 		}
 
-		return $tooltip;
+		$attribs['accesskey'] = $accesskey ?: null;
+		$attribs['title'] = $tooltip;
+		return $attribs;
 	}
 
 	public static $accesskeycache;
@@ -2351,17 +2378,7 @@ class Linker {
 			}
 		}
 
-		$attribs = [
-			'title' => self::titleAttrib( $tooltipTitle, $options, $msgParams ),
-			'accesskey' => self::accesskey( $name )
-		];
-		if ( $attribs['title'] === false ) {
-			unset( $attribs['title'] );
-		}
-		if ( $attribs['accesskey'] === false ) {
-			unset( $attribs['accesskey'] );
-		}
-		return $attribs;
+		return self::tooltipAttribs( $tooltipTitle, $options, $msgParams );
 	}
 
 	/**
@@ -2373,7 +2390,7 @@ class Linker {
 	 */
 	public static function tooltip( $name, $options = null ) {
 		$tooltip = self::titleAttrib( $name, $options );
-		if ( $tooltip === false ) {
+		if ( !$tooltip ) {
 			return '';
 		}
 		return Xml::expandAttributes( [
