@@ -2524,6 +2524,9 @@ class OutputPage extends ContextSource {
 		$config = $this->getConfig();
 
 		if ( $this->mRedirect != '' ) {
+			# Buffer output
+			ob_start();
+
 			# Standards require redirect URLs to be absolute
 			$this->mRedirect = wfExpandUrl( $this->mRedirect, PROTO_CURRENT );
 
@@ -2546,6 +2549,7 @@ class OutputPage extends ContextSource {
 				if ( $config->get( 'DebugRedirects' ) ) {
 					$url = htmlspecialchars( $redirect );
 					print "<!DOCTYPE html>\n<html>\n<head>\n<title>Redirect</title>\n</head>\n<body>\n";
+					print "<h3>Redirect header:</h3>\n";
 					print "<p>Location: <a href=\"$url\">$url</a></p>\n";
 					print "</body>\n</html>\n";
 				} else {
@@ -2553,7 +2557,12 @@ class OutputPage extends ContextSource {
 				}
 			}
 
-			return $return ? '' : null;
+			if ( $return ) {
+				return ob_get_clean();
+			} else {
+				ob_end_flush();
+				return null;
+			}
 		} elseif ( $this->mStatusCode ) {
 			$response->statusHeader( $this->mStatusCode );
 		}
