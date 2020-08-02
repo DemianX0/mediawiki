@@ -2134,7 +2134,7 @@ abstract class Skin extends ContextSource {
 		}
 
 		if ( $this->getConfig()->get( 'EnableSectionHeaderShare' ) && $anchor !== '' ) {
-			$this->getOutput()->addModules( 'mediawiki.page.share' );
+			$this->getOutput()->addModules( 'mediawiki.page.sharewidget' );
 
 			$shareMessage = $this->msg( 'share' )
 				->inLanguage( $lang )->text();

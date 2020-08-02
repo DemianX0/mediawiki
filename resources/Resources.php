@@ -1612,9 +1612,9 @@ return [
 			'jquery.spinner',
 		],
 	],
-	'mediawiki.page.share' => [
-		'styles' => 'resources/src/mediawiki.page.share.css',
-		'scripts' => 'resources/src/mediawiki.page.share.js',
+	'mediawiki.page.sharewidget' => [
+		'styles' => 'resources/src/mediawiki.page.sharewidget/sharewidget.less',
+		'scripts' => 'resources/src/mediawiki.page.sharewidget/sharewidget.js',
 		'messages' => [
 			'share-popup-title',
 			'share-wikitext',
