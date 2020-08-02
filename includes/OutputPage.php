@@ -310,9 +310,14 @@ class OutputPage extends ContextSource {
 	private $mTarget = null;
 
 	/**
+	 * @var bool Whether parser output should print a table of contents
+	 */
+	private $mAllowTOC = false;
+
+	/**
 	 * @var bool Whether parser output contains a table of contents
 	 */
-	private $mEnableTOC = false;
+	private $mHasTOC = false;
 
 	/**
 	 * @var string|null The URL to send in a <link> element with rel=license
@@ -1985,9 +1990,7 @@ class OutputPage extends ContextSource {
 		// so that extensions may modify ParserOutput to toggle TOC.
 		// This cannot be moved to addParserOutputText because that is not
 		// called by EditPage for Preview.
-		if ( $parserOutput->getTOCHTML() ) {
-			$this->mEnableTOC = true;
-		}
+		$this->mHasTOC = !!$parserOutput->getTOCHTML();
 	}
 
 	/**
@@ -2015,6 +2018,9 @@ class OutputPage extends ContextSource {
 	 * @param array $poOptions Options to ParserOutput::getText()
 	 */
 	public function addParserOutputText( ParserOutput $parserOutput, $poOptions = [] ) {
+		if ( $this->mAllowTOC === false ) {
+			$poOptions += [ 'allowTOC' => false ];
+		}
 		$text = $parserOutput->getText( $poOptions );
 		$this->getHookRunner()->onOutputPageBeforeHTML( $this, $text );
 		$this->addHTML( $text );
@@ -4152,12 +4158,21 @@ class OutputPage extends ContextSource {
 	}
 
 	/**
+	 * Set whether the output should print a table of contents
+	 * @param bool $allowTOC
+	 * @since 1.36
+	 */
+	public function setTOCAllowed( $allowTOC ) {
+		return $this->mAllowTOC = $allowTOC;
+	}
+
+	/**
 	 * Whether the output has a table of contents
 	 * @return bool
 	 * @since 1.22
 	 */
 	public function isTOCEnabled() {
-		return $this->mEnableTOC;
+		return $this->mAllowTOC && $this->mHasTOC;
 	}
 
 	/**
