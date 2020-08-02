@@ -4116,7 +4116,7 @@ class Parser {
 		# be trimmed here since whitespace in HTML headings is significant.
 		$matches = [];
 		$numMatches = preg_match_all(
-			'/<H(?P<level>[1-6])(?P<attrib>.*?>)(?P<header>[\s\S]*?)<\/H[1-6] *>/i',
+			'/<H(?P<level>[1-6])(?P<attribs>.*?>)(?P<header>[\s\S]*?)<\/H[1-6] *>/i',
 			$text,
 			$matches
 		);
@@ -4153,7 +4153,7 @@ class Parser {
 		# passed to the skin functions. These are determined here
 		$toc = '';
 		$full = '';
-		$head = [];
+		$headlines = [];
 		$sublevelCount = [];
 		$levelCount = [];
 		$level = 0;
@@ -4190,7 +4190,7 @@ class Parser {
 			if ( $toclevel ) {
 				$prevlevel = $level;
 			}
-			$level = $matches[1][$headlineCount];
+			$level = $matches[1][ $headlineCount ];
 
 			if ( $level > $prevlevel ) {
 				# Increase TOC level
@@ -4381,7 +4381,7 @@ class Parser {
 				);
 				$node = $node->getNextSibling();
 			}
-			$tocraw[] = [
+			$tocraw[ $headlineCount ] = [
 				'toclevel' => $toclevel,
 				'level' => $level,
 				'line' => $tocline,
@@ -4428,15 +4428,16 @@ class Parser {
 			} else {
 				$editlink = '';
 			}
-			$head[$headlineCount] = Linker::makeHeadline(
-				$level,
-				$matches['attrib'][$headlineCount],
-				$anchor,
-				$headline,
-				$editlink,
-				$fallbackAnchor
-			);
 
+			$headlines[ $headlineCount ] = [
+				'level' => $level,
+				'attribs' => $matches['attribs'][ $headlineCount ],
+				'anchor' => $anchor, // Escaped by Sanitizer::escapeIdForAttribute( $safeHeadline, Sanitizer::ID_PRIMARY );
+				'headline' => $headline,
+				'editlink' => $editlink,
+				'fallbackAnchor' => $fallbackAnchor, // Escaped by Sanitizer::escapeIdForAttribute( $safeHeadline, Sanitizer::ID_FALLBACK );
+			];
+			
 			$headlineCount++;
 		}
 
@@ -4465,13 +4466,21 @@ class Parser {
 		$i = 0;
 
 		// build an array of document sections
+		$sectionEndHTML = "</div>\n</section>\n";
 		$sections = [];
+		$parents = [];
+		$prevlevel = 0;
 		foreach ( $blocks as $block ) {
-			// $head is zero-based, sections aren't.
-			if ( empty( $head[$i - 1] ) ) {
-				$sections[$i] = $block;
-			} else {
-				$sections[$i] = $head[$i - 1] . $block;
+			// $headlines is zero-based, $blocks is 1-based array.
+			$headlineCount = $i - 1;
+			$tocitem = &$tocraw[ $headlineCount ] ?? null;
+			$toclevel = $tocitem ? $tocitem['toclevel'] : 1;
+			while ( $toclevel <= $prevlevel-- ) {
+				$sections[ $headlineCount ] .= $sectionEndHTML;
+			}
+
+			if ( $this->mForceTocPosition ) {
+				$block = str_replace( '<!--MWTOC\'"-->', $toc, $block );
 			}
 
 			/**
@@ -4483,10 +4492,33 @@ class Parser {
 			 * $section : the section number
 			 * &$sectionContent : ref to the content of the section
 			 * $maybeShowEditLinks : boolean describing whether this section has an edit link
+			$this->hookRunner->onParserSectionCreate( $this, $i, $block, $maybeShowEditLink );
 			 */
-			$this->hookRunner->onParserSectionCreate( $this, $i, $sections[$i], $maybeShowEditLink );
 
-			$i++;
+			$heading = $headlines[ $headlineCount ] ?? null;
+
+			if ( $heading ) {
+				// Output only starting section tag. Closing tag is output by next section on the same level.
+				$sectionID = $heading['anchor'];
+				$headingID = $sectionID . "--h$level";
+				$headingHTML = Linker::makeHeadline( $heading['level'],
+					$heading['attribs'], $headingID, $heading['headline'],
+					$heading['editlink'], $heading['fallbackAnchor'] );
+
+				$block = ""
+					. '<section id="' . $sectionID . '" aria-labelledby="' . $headingID . '">' . "\n"
+					. $headingHTML
+					. '<div class="mw-section--body">' . "\n"
+					. $block;
+
+				$prevlevel = $toclevel;
+			}
+
+			$sections[$i++] = $block;
+		}
+
+		while ( 1 <= $prevlevel-- ) {
+			$sections[$i-1] .= $sectionEndHTML;
 		}
 
 		if ( $enoughToc && $isMain && !$this->mForceTocPosition ) {
@@ -4495,13 +4527,7 @@ class Parser {
 			$sections[0] .= $toc . "\n";
 		}
 
-		$full .= implode( '', $sections );
-
-		if ( $this->mForceTocPosition ) {
-			return str_replace( '<!--MWTOC\'"-->', $toc, $full );
-		} else {
-			return $full;
-		}
+		return implode( $sections );
 	}
 
 	/**
