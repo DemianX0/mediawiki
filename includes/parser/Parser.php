@@ -4484,6 +4484,8 @@ class Parser {
 			$sections[$i-1] .= $sectionEndHTML;
 		}
 
+		$this->mOutput->setSectionsHTML( $sections );
+
 		if ( $enoughToc && $isMain && !$this->mForceTocPosition ) {
 			// append the TOC at the beginning
 			// Top anchor now in skin
