@@ -4299,18 +4299,18 @@ class Parser {
 			$fallbackAnchor = $fallbackHeadline;
 			if ( isset( $refers[$arrayKey] ) ) {
 				// phpcs:ignore Generic.Formatting.DisallowMultipleStatements
-				for ( $i = 2; isset( $refers["${arrayKey}_$i"] ); ++$i );
-				$anchor .= "_$i";
-				$linkAnchor .= "_$i";
-				$refers["${arrayKey}_$i"] = true;
+				for ( $i = 2; isset( $refers["${arrayKey}-$i"] ); ++$i );
+				$anchor .= "-$i";
+				$linkAnchor .= "-$i";
+				$refers["${arrayKey}-$i"] = true;
 			} else {
 				$refers[$arrayKey] = true;
 			}
 			if ( $fallbackHeadline !== false && isset( $refers[$fallbackArrayKey] ) ) {
 				// phpcs:ignore Generic.Formatting.DisallowMultipleStatements
-				for ( $i = 2; isset( $refers["${fallbackArrayKey}_$i"] ); ++$i );
-				$fallbackAnchor .= "_$i";
-				$refers["${fallbackArrayKey}_$i"] = true;
+				for ( $i = 2; isset( $refers["${fallbackArrayKey}-$i"] ); ++$i );
+				$fallbackAnchor .= "-$i";
+				$refers["${fallbackArrayKey}-$i"] = true;
 			} else {
 				$refers[$fallbackArrayKey] = true;
 			}
@@ -4362,7 +4362,7 @@ class Parser {
 					# Put a T flag in the section identifier, to indicate to extractSections()
 					# that sections inside <includeonly> should be counted.
 					$editsectionPage = $titleText;
-					$editsectionSection = "T-$sectionIndex";
+					$editsectionSection = 'T-' . $sectionIndex;
 					$editsectionContent = null;
 				} else {
 					$editsectionPage = $this->getTitle()->getPrefixedText();
