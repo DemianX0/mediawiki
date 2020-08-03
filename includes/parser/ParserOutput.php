@@ -169,6 +169,11 @@ class ParserOutput extends CacheTime {
 	public $mSections = [];
 
 	/**
+	 * @var array HTML of sections.
+	 */
+	public $mSectionsHTML = [];
+
+	/**
 	 * @var array Name/value pairs to be cached in the DB.
 	 */
 	public $mProperties = [];
@@ -595,8 +600,13 @@ class ParserOutput extends CacheTime {
 		return $this->mTitleText;
 	}
 
+	/** getTOCRaw() */
 	public function getSections() {
 		return $this->mSections;
+	}
+
+	public function getSectionsHTML() {
+		return $this->mSectionsHTML;
 	}
 
 	public function &getLinks() {
@@ -737,8 +747,13 @@ class ParserOutput extends CacheTime {
 		return wfSetVar( $this->mTitleText, $t );
 	}
 
+	/** setTOCRaw() */
 	public function setSections( $toc ) {
 		return wfSetVar( $this->mSections, $toc );
+	}
+
+	public function setSectionsHTML( $sectionsHTML ) {
+		return wfSetVar( $this->mSectionsHTML, $sectionsHTML );
 	}
 
 	public function setIndexPolicy( $policy ) {
@@ -1521,6 +1536,7 @@ class ParserOutput extends CacheTime {
 		// TODO: we'll have to be smarter about this!
 		$this->mSections = array_merge( $this->mSections, $source->getSections() );
 		$this->mTOCHTML .= $source->mTOCHTML;
+		//mSectionsHTML?
 
 		// XXX: we don't want to concatenate title text, so first write wins.
 		// We should use the first *modified* title text, but we don't have the original to check.
