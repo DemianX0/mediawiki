@@ -742,11 +742,11 @@ class Message implements MessageSpecifier, Serializable {
 	 *
 	 * @since 1.19
 	 *
-	 * @param IContextSource $context
+	 * @param IMessageContext $context
 	 *
 	 * @return Message $this
 	 */
-	public function setContext( IContextSource $context ) {
+	public function setContext( IMessageContext $context ) {
 		$this->inLanguage( $context->getLanguage() );
 		$this->title( $context->getTitle() );
 		$this->interface = true;
@@ -850,7 +850,7 @@ class Message implements MessageSpecifier, Serializable {
 	 *
 	 * @return Message $this
 	 */
-	public function title( $title ) {
+	public function title( Title $title ) {
 		$this->title = $title;
 		return $this;
 	}

@@ -52,9 +52,12 @@ use MediaWiki\Permissions\Authority;
  * belong here either. Session state changes should only be propagated on
  * shutdown by separate persistence handler objects, for example.
  *
+ * Since 1.36 getLanguage() and getTitle() were refactored to IMessageContext.
+ * Method signatures did not change, additinally extends IMessageContext too.
+ *
  * @unstable for implementation, extensions should subclass ContextSource instead.
  */
-interface IContextSource extends MessageLocalizer {
+interface IContextSource extends MessageLocalizer, IMessageContext {
 
 	/**
 	 * @return WebRequest
@@ -63,6 +66,7 @@ interface IContextSource extends MessageLocalizer {
 
 	/**
 	 * @return Title|null
+	 * Since 1.36 inherited from IMessageContext.
 	 */
 	public function getTitle();
 
@@ -106,6 +110,7 @@ interface IContextSource extends MessageLocalizer {
 	/**
 	 * @return Language
 	 * @since 1.19
+	 * Since 1.36 inherited from IMessageContext.
 	 */
 	public function getLanguage();
 
