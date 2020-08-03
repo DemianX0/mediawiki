@@ -31,7 +31,7 @@
 		TextClass = config.multiline ? OO.ui.MultilineTextInputWidget : OO.ui.TextInputWidget;
 		this.textInput = new TextClass( $.extend( {
 			value: config.copyText,
-			readOnly: true
+			readOnly: config.readOnly != null ? config.readOnly : true,
 		}, config.textInput ) );
 		this.button = new OO.ui.ButtonWidget( $.extend( {
 			label: mw.msg( 'mw-widgets-copytextlayout-copy' ),

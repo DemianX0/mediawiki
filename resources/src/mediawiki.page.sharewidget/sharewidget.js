@@ -36,6 +36,7 @@
 		var copiableLink = new mw.widgets.CopyTextLayout( {
 			label: mw.msg( 'share-link' ),
 			copyText: $shareLink[0].href,
+			readOnly: false,
 			align: 'top',
 			textInput: {
 				title: mw.msg( 'share-link-tooltip', sectionTitle ),
@@ -45,6 +46,7 @@
 		copiableWikilink = new mw.widgets.CopyTextLayout( {
 			label: mw.msg( 'share-wikilink' ),
 			copyText: linkWikitext,
+			readOnly: false,
 			align: 'top',
 			textInput: {
 				title: mw.msg( 'share-wikilink-tooltip', sectionTitle ),
