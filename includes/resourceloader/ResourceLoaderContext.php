@@ -30,7 +30,7 @@ use MediaWiki\MediaWikiServices;
  * @ingroup ResourceLoader
  * @since 1.17
  */
-class ResourceLoaderContext implements MessageLocalizer {
+class ResourceLoaderContext implements MessageLocalizer, IMessageContext {
 	public const DEFAULT_LANG = 'qqx';
 	public const DEFAULT_SKIN = 'fallback';
 
@@ -197,6 +197,10 @@ class ResourceLoaderContext implements MessageLocalizer {
 		return $this->language;
 	}
 
+	public function getTitle() : Title {
+		return Title::newFromText( 'Dwimmerlaik' );
+	}
+
 	public function getDirection() : string {
 		if ( $this->direction === null ) {
 			$direction = $this->getRequest()->getRawVal( 'dir' );
@@ -237,7 +241,9 @@ class ResourceLoaderContext implements MessageLocalizer {
 			// Use a dummy title because there is no real title
 			// for this endpoint, and the cache won't vary on it
 			// anyways.
-			->title( Title::newFromText( 'Dwimmerlaik' ) );
+			->title( $this->getTitle() );
+		// FIXME: missing? RL's '?lang' request param sets the interface language.
+		// ->setInterfaceMessageFlag( true );
 	}
 
 	/**
