@@ -856,6 +856,13 @@ return [
 		return new MessageFormatterFactory();
 	},
 
+	'MessageLocalizer' => function ( MediaWikiServices $services ) : MessageLocalizer {
+		if ( defined( 'MW_NO_SESSION' ) ) {
+			throw new BadMethodCallException ( 'Cannot use default MessageLocalizer without a session. Redefine the service in the session-less entry point "' . ( MW_ENTRY_POINT ?? 'unknown' ) . '".' );
+		}
+		return new MessageLocalizerWithSession();
+	},
+
 	'MimeAnalyzer' => static function ( MediaWikiServices $services ) : MimeAnalyzer {
 		$logger = LoggerFactory::getInstance( 'Mime' );
 		$mainConfig = $services->getMainConfig();

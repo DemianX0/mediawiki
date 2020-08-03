@@ -97,6 +97,7 @@ use MediaWiki\User\UserOptionsLookup;
 use MediaWiki\User\UserOptionsManager;
 use MediaWiki\Watchlist\WatchlistManager;
 use MessageCache;
+use MessageLocalizer;
 use MimeAnalyzer;
 use MWException;
 use NamespaceInfo;
@@ -1093,6 +1094,14 @@ class MediaWikiServices extends ServiceContainer {
 	 */
 	public function getMessageFormatterFactory() : IMessageFormatterFactory {
 		return $this->getService( 'MessageFormatterFactory' );
+	}
+
+	/**
+	 * @since 1.36
+	 * @return MessageLocalizer
+	 */
+	public function getMessageLocalizer() : MessageLocalizer {
+		return $this->getService( 'MessageLocalizer' );
 	}
 
 	/**

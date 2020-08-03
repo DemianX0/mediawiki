@@ -1132,6 +1132,7 @@ $wgAutoloadLocalClasses = [
 	'MessageCacheUpdate' => __DIR__ . '/includes/deferred/MessageCacheUpdate.php',
 	'MessageContent' => __DIR__ . '/includes/content/MessageContent.php',
 	'MessageLocalizer' => __DIR__ . '/includes/language/MessageLocalizer.php',
+	'MessageLocalizerWithSession' => __DIR__ . '/includes/language/MessageLocalizerWithSession.php',
 	'MessageSpecifier' => __DIR__ . '/includes/libs/MessageSpecifier.php',
 	'MigrateActors' => __DIR__ . '/maintenance/includes/MigrateActors.php',
 	'MigrateArchiveText' => __DIR__ . '/maintenance/migrateArchiveText.php',
