@@ -46,6 +46,9 @@ function wfLoadMain() {
 
 	$resourceLoader = MediaWikiServices::getInstance()->getResourceLoader();
 	$context = new ResourceLoaderContext( $resourceLoader, $wgRequest );
+	MediaWikiServices::getInstance()->redefineService( 'MessageLocalizer', function () use ( $context ) {
+		return $context;
+	} );
 
 	// Respond to ResourceLoader request
 	$resourceLoader->respond( $context );
