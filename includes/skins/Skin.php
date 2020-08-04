@@ -2198,7 +2198,6 @@ abstract class Skin extends ContextSource {
 			'class' => 'mw-editsection-share',
 			'attribs' => [
 				'title' => $shareTooltip,
-				'data-mw-share-section' => $sectionTitle,
 			],
 		];
 	}
