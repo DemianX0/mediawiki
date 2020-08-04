@@ -2,12 +2,26 @@
  * Styles for section header share links
  */
 @import 'mediawiki.mixins.less';
+@import 'mediawiki.mixins.flex-align.less';
 
 .mw-editsection-share {
 	.oo-ui-popupWidget-popup {
 		width: 50em !important;
 		//min-width: 40em;
 		max-width: 60vw;
+	}
+
+	.oo-ui-fieldLayout-body {
+		.flex-display();
+		.align-items( center );
+	}
+
+	.oo-ui-fieldLayout-header {
+		width: 6em;
+	}
+
+	.oo-ui-fieldLayout-field {
+		.flex-size( 1, 1, 30em );
 	}
 
 	.oo-ui-popupWidget-body {

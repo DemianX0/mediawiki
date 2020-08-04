@@ -37,11 +37,13 @@
 		var wikiLink = $shareLink.attr( 'data-mw-wikilink' ) ||
 			mw.Title.newFromText( mw.config.get( 'wgPageName' ) ).getPrefixedText() + sectionFragment;
 		var inputClasses = [ 'mw-editfont-' + mw.user.options.get( 'editfont' ) ];
+		//var labelPosition = 'left';
+		var labelPosition = 'top';
 		var copiableLink = elLink && new mw.widgets.CopyTextLayout( {
 			label: mw.msg( 'share-link' ),
 			copyText: elLink.href,
 			readOnly: false,
-			align: 'top',
+			align: labelPosition,
 			textInput: {
 				title: mw.msg( 'share-link-tooltip', sectionTitle ),
 				classes: inputClasses,
@@ -51,7 +53,7 @@
 			label: mw.msg( 'share-wikilink' ),
 			copyText: '[[' + wikiLink + ']]',
 			readOnly: false,
-			align: 'top',
+			align: labelPosition,
 			textInput: {
 				title: mw.msg( 'share-wikilink-tooltip', sectionTitle ),
 				classes: inputClasses,
