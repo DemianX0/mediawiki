@@ -77,7 +77,16 @@ class Title implements LinkTarget, PageIdentity, IDBAccessObject {
 
 	/***************************************************************************/
 	// region   Private member variables
-	/** @name   Private member variables
+	/**
+	 * Pseudo Title always representing the current page.
+	 * NOT .equal() to the currently rendered page's Title.
+	 *
+	 * @since 1.36
+	 */
+	private static Title $pseudoCurrentPage;
+
+	/**
+	 * @name Private member variables
 	 * Please use the accessor functions instead.
 	 * @internal
 	 * @{
@@ -242,6 +251,34 @@ class Title implements LinkTarget, PageIdentity, IDBAccessObject {
 	}
 
 	private function __construct() {
+	}
+
+	/**
+	 * Return a pseudo Title always representing the current page.
+	 * It is NOT .equal() to the currently rendered page's Title.
+	 * Use only to generate URLs consisting of a single '#' anchor.
+	 *
+	 * @return Title
+	 * @since 1.36
+	 */
+	public static function pseudoCurrentPage() : Title {
+		$pseudoCurrentPage = $pseudoCurrentPage ?? new Title();
+		return $pseudoCurrentPage;
+	}
+
+	/**
+	 * Create a new Title from a fragment identifier (anchor).
+	 * This won't target any specific page.
+	 * Use only to generate URLs consisting of a single '#' hash part.
+	 *
+	 * @param $anchorID string HTML ID of a section
+	 * @return Title
+	 * @since 1.36
+	 */
+	public static function newPlainFragment( $anchorID ) : Title {
+		$t = new Title();
+		$t->mFragment = $anchorID;
+		return $t;
 	}
 
 	/**
