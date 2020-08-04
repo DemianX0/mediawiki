@@ -16,7 +16,9 @@
 
 		$shareLink.data( 'mw-share-init', true ).on( 'click', function ( e ) {
 			var modules = [
-				'mediawiki.widgets', 'mediawiki.editfont.styles', 'mediawiki.jqueryMsg'
+				'mediawiki.widgets',
+				'mediawiki.jqueryMsg',
+				//'mediawiki.editfont.styles',
 			];
 			e.preventDefault();
 
@@ -36,7 +38,8 @@
 		var sectionTitle = $shareLink.closest( '.mw-editsection' ).siblings( '.mw-headline' ).text();
 		var wikiLink = $shareLink.attr( 'data-mw-wikilink' ) ||
 			mw.Title.newFromText( mw.config.get( 'wgPageName' ) ).getPrefixedText() + sectionFragment;
-		var inputClasses = [ 'mw-editfont-' + mw.user.options.get( 'editfont' ) ];
+		//var inputClasses = [ 'mw-editfont-' + mw.user.options.get( 'editfont' ) ];
+		var inputClasses = null;
 		//var labelPosition = 'left';
 		var labelPosition = 'top';
 		var copiableLink = elLink && new mw.widgets.CopyTextLayout( {
