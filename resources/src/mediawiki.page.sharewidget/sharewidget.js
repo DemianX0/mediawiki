@@ -3,7 +3,7 @@
  */
 ( function () {
 	mw.hook( 'wikipage.content' ).add( function ( $content ) {
-		$content.find( '.mw-editsection-share[data-mw-share-section]' ).each( initPopup );
+		$content.find( '.mw-editsection-share' ).each( initPopup );
 	} );
 
 	function initPopup() {
@@ -31,26 +31,30 @@
 	}
 
 	function createPopup( $shareLink ) {
-		var linkWikitext = mw.Title.newFromText( mw.config.get( 'wgPageName' ) )
-			.getPrefixedText() + '#' + $shareLink.attr( 'data-mw-share-section' );
-		var copiableLink = new mw.widgets.CopyTextLayout( {
+		var elLink = $shareLink[0];
+		var sectionFragment = $shareLink.attr( 'href' ) || '';
+		var sectionTitle = $shareLink.closest( '.mw-editsection' ).siblings( '.mw-headline' ).text();
+		var wikiLink = $shareLink.attr( 'data-mw-wikilink' ) ||
+			mw.Title.newFromText( mw.config.get( 'wgPageName' ) ).getPrefixedText() + sectionFragment;
+		var inputClasses = [ 'mw-editfont-' + mw.user.options.get( 'editfont' ) ];
+		var copiableLink = elLink && new mw.widgets.CopyTextLayout( {
 			label: mw.msg( 'share-link' ),
-			copyText: $shareLink[0].href,
+			copyText: elLink.href,
 			readOnly: false,
 			align: 'top',
 			textInput: {
 				title: mw.msg( 'share-link-tooltip', sectionTitle ),
-				classes: [ 'mw-editfont-' + mw.user.options.get( 'editfont' ) ]
+				classes: inputClasses,
 			}
-		} ),
-		copiableWikilink = new mw.widgets.CopyTextLayout( {
+		} );
+		var copiableWikilink = wikiLink && new mw.widgets.CopyTextLayout( {
 			label: mw.msg( 'share-wikilink' ),
-			copyText: linkWikitext,
+			copyText: '[[' + wikiLink + ']]',
 			readOnly: false,
 			align: 'top',
 			textInput: {
 				title: mw.msg( 'share-wikilink-tooltip', sectionTitle ),
-				classes: [ 'mw-editfont-' + mw.user.options.get( 'editfont' ) ]
+				classes: inputClasses,
 			}
 		} );
 
@@ -60,8 +64,8 @@
 				.append(
 					$( '<h4>' ).addClass( 'mw-editsection-share-popup-title' )
 						.text( mw.msg( 'share-popup-title' ) ),
-					copiableLink.$element,
-					copiableWikilink.$element
+					( copiableLink ? copiableLink.$element : null ),
+					( copiableWikilink ? copiableWikilink.$element : null ),
 				),
 			classes: [ 'mw-editsection-share' ],
 			align: 'forwards',
