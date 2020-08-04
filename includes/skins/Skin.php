@@ -2069,7 +2069,7 @@ abstract class Skin extends ContextSource {
 		$shareTooltip = $this->msg( 'share-tooltip' )->plaintextParams( $sectionTitle )->text();
 
 		$links['share'] = [
-			'targetTitle' => $pageTitle->createFragmentTarget( $sectionID ),
+			'targetTitle' => Title::newPlainFragment( $sectionID ),
 			'text' => $this->msg( 'share' )->text(),
 			'class' => 'mw-editsection-share',
 			'attribs' => [
