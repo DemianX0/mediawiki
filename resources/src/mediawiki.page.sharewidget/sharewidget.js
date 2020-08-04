@@ -52,6 +52,17 @@
 				classes: inputClasses,
 			}
 		} );
+		var elPermalink = !transcluded && $( '#t-permalink > a' )[0];
+		var copiablePermalink = elPermalink && new mw.widgets.CopyTextLayout( {
+			label: mw.msg( 'share-permalink' ),
+			copyText: elPermalink.href + sectionFragment,
+			readOnly: false,
+			align: labelPosition,
+			textInput: {
+				title: mw.msg( 'share-permalink-tooltip', sectionTitle ),
+				classes: inputClasses,
+			}
+		} );
 		var copiableWikilink = wikiLink && new mw.widgets.CopyTextLayout( {
 			label: mw.msg( 'share-wikilink' ),
 			copyText: '[[' + wikiLink + ']]',
@@ -70,6 +81,7 @@
 					$( '<h4>' ).addClass( 'mw-editsection-share-popup-title' )
 						.text( mw.msg( 'share-popup-title' ) ),
 					( copiableLink ? copiableLink.$element : null ),
+					( copiablePermalink ? copiablePermalink.$element : null ),
 					( copiableWikilink ? copiableWikilink.$element : null ),
 				),
 			classes: [ 'mw-editsection-share' ],
