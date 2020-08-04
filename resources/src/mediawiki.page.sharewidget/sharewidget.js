@@ -71,10 +71,20 @@
 			align: 'forwards',
 			autoClose: true,
 			padded: true,
-			width: 380
+			width: 'auto',
+		} );
+
+		// Disable auto-hiding of section links while open.
+		popup.on( 'ready', function() {
+			$shareLink.closest( '.mw-editsection' ).addClass( 'mw-pinned' );
+		} );
+		popup.on( 'closing', function() {
+			$shareLink.closest( '.mw-editsection' ).removeClass( 'mw-pinned' );
 		} );
 
 		OO.ui.getDefaultOverlay().append( popup.$element );
+		//$( e.target ).closest( '.mw-editsection-share' ).append( popup.$element );
+		// Needs repositioning of the anchor triangle.
 
 		popup.toggle();
 		return popup;

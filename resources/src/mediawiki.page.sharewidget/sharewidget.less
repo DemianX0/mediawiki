@@ -1,12 +1,59 @@
 /*!
  * Styles for section header share links
  */
+@import 'mediawiki.mixins.less';
 
-.mw-editsection-share .mw-editsection-share-popup-title {
-	margin: 0;
-	line-height: 1;
+.mw-editsection-share {
+	.oo-ui-popupWidget-popup {
+		width: 50em !important;
+		//min-width: 40em;
+		max-width: 60vw;
+	}
+
+	.oo-ui-popupWidget-body {
+		width: auto !important;
+		max-width: none !important;
+	}
+
+	.oo-ui-textInputWidget,
+	.oo-ui-actionFieldLayout.oo-ui-fieldLayout-align-top,
+	.mw-widget-copyTextLayout > .oo-ui-fieldLayout-body > .oo-ui-fieldLayout-field {
+		max-width: none;
+	}
+
+	.mw-widget-copyTextLayout {
+		margin-bottom: 0.85714286em;
+	}
 }
 
-.mw-editsection-share .mw-widget-copyTextLayout {
-	margin-bottom: 0.85714286em;
+.mw-editsection-share-popup-title {
+	margin: 0;
+	line-height: 1;
+	text-align: center;
+}
+
+@transition-duration-base: 100ms;
+
+.mw-editsection {
+	@timing: @transition-duration-base * 2 ease-out;
+	.transition( opacity @timing, visibility @timing; );
+	.transition-duration-reduced();
+
+	// Hide if not hovering over the parent heading.
+	*:not( :hover ) > &:not( .mw-pinned ) {
+		opacity: 0;
+		visibility: hidden;
+		transition-delay: @transition-duration-base * 3; // Delay hiding.
+		// Support: IE10, no prefixing for FF<=15, Chrome<=25, Safari<=8.4, Android<=4.4.4 - not worth the bytes.
+	}
+
+	// Show if not hovering but the focus is within the containing section.
+	// It's a kind of magic.
+	// Support for focus-within: FF 52+, Chrome 60+, Safari 10.1+, Opera 47+, iOS 10.3+
+	*:focus-within > &&,
+	section:focus-within > .mw-section--header > & {
+		opacity: 1;
+		visibility: visible;
+		transition-delay: 0ms; // No delay showing.
+	}
 }
