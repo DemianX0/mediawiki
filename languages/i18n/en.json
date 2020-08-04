@@ -268,6 +268,8 @@
 	"share-popup-title": "Share this section",
 	"share-link": "Link",
 	"share-link-tooltip": "Internet link to section titled '$1'",
+	"share-permalink": "Permalink",
+	"share-permalink-tooltip": "Internet link to this version of section titled '$1'",
 	"share-wikilink": "Wiki link",
 	"share-wikilink-tooltip": "Wiki link to section titled '$1'",
 	"editsection": "Edit section",

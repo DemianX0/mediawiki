@@ -491,6 +491,8 @@
 	"share-popup-title": "The title for the section share action popup. {{Identical|Share this section}}",
 	"share-link": "The label of the internet link to the section. {{Identical|Link}}",
 	"share-link-tooltip": "The link to the section as announced by screen-readers.\n{{Identical|Internet link to section titled '$1'}}",
+	"share-permalink": "The label of the versioned (permanent) link to the section. {{Identical|Permalink}}",
+	"share-permalink-tooltip": "The versioned (permanent) link to the section as announced by screen-readers.\n{{Identical|Internet link to this version of section titled '$1'}}",
 	"share-wikilink": "The label of the wiki text link to the section. {{Identical|Wiki link}}",
 	"share-wikilink-tooltip": "The wiki link to the section as announced by screen-readers.\n{{Identical|Wiki link to this version of section titled '$1'}}",
 	"editsection": "Display name of link to edit a section on a content page. Example: [{{MediaWiki:Editsection}}].\n\n{{Identical|Edit section}}",

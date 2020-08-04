@@ -1620,6 +1620,8 @@ return [
 			'share-popup-title',
 			'share-link',
 			'share-link-tooltip',
+			'share-permalink',
+			'share-permalink-tooltip',
 			'share-wikilink',
 			'share-wikilink-tooltip',
 		],
