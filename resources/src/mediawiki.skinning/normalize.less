@@ -9,6 +9,15 @@
  * See https://www.mediawiki.org/wiki/Compatibility#Browser_support_matrix
  */
 
+html {
+	// Restore original font-size of content on mobile devices.
+	// https://stackoverflow.com/questions/11289166/chrome-on-android-resizes-font/15577811#15577811
+	-webkit-text-size-adjust: none;
+	-moz-text-size-adjust: none;
+	-ms-text-size-adjust: none;
+	text-size-adjust: none;
+}
+
 body {
 	// Support all browser: Remove the margin (opinionated).
 	margin: 0;
