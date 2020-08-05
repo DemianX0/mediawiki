@@ -119,7 +119,7 @@ class User implements IDBAccessObject, UserIdentity {
 	/** @var string */
 	public $mName;
 	/** @var int|null */
-	protected $mActorId;
+	protected ?int $mActorId;
 	/** @var string */
 	public $mRealName;
 
@@ -559,7 +559,7 @@ class User implements IDBAccessObject, UserIdentity {
 	 * @param int $id Valid user ID
 	 * @return User The corresponding User object
 	 */
-	public static function newFromId( $id ) {
+	public static function newFromId( int $id ) {
 		$u = new User;
 		$u->mId = $id;
 		$u->mFrom = 'id';
@@ -574,7 +574,7 @@ class User implements IDBAccessObject, UserIdentity {
 	 * @param int $id Valid actor ID
 	 * @return User The corresponding User object
 	 */
-	public static function newFromActorId( $id ) {
+	public static function newFromActorId( int $id ) {
 		$u = new User;
 		$u->mActorId = $id;
 		$u->mFrom = 'actor';
@@ -1156,7 +1156,7 @@ class User implements IDBAccessObject, UserIdentity {
 	 * @param string|bool $name
 	 * @param int|null $actorId
 	 */
-	public function loadDefaults( $name = false, $actorId = null ) {
+	public function loadDefaults( $name = false, ?int $actorId = null ) {
 		$this->mId = 0;
 		$this->mName = $name;
 		$this->mActorId = $actorId;
@@ -2036,7 +2036,7 @@ class User implements IDBAccessObject, UserIdentity {
 			$this->setItemLoaded( 'actor' );
 		}
 
-		return (int)$this->mActorId;
+		return $this->mActorId;
 	}
 
 	/**
