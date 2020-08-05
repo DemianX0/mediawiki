@@ -139,7 +139,7 @@ class User implements Authority, IDBAccessObject, UserIdentity, UserEmailContact
 	 *
 	 * @var int|null
 	 */
-	public $mActorId;
+	public ?int $mActorId;
 	/** @var string */
 	public $mRealName;
 
@@ -626,7 +626,7 @@ class User implements Authority, IDBAccessObject, UserIdentity, UserEmailContact
 	 * @param int $id Valid user ID
 	 * @return User The corresponding User object
 	 */
-	public static function newFromId( $id ) {
+	public static function newFromId( int $id ) {
 		return MediaWikiServices::getInstance()
 			->getUserFactory()
 			->newFromId( (int)$id );
@@ -643,7 +643,7 @@ class User implements Authority, IDBAccessObject, UserIdentity, UserEmailContact
 	 * @param int $id Valid actor ID
 	 * @return User The corresponding User object
 	 */
-	public static function newFromActorId( $id ) {
+	public static function newFromActorId( int $id ) {
 		return MediaWikiServices::getInstance()
 			->getUserFactory()
 			->newFromActorId( (int)$id );
@@ -1198,7 +1198,7 @@ class User implements Authority, IDBAccessObject, UserIdentity, UserEmailContact
 	 * @param string|bool $name
 	 * @param int|null $actorId
 	 */
-	public function loadDefaults( $name = false, $actorId = null ) {
+	public function loadDefaults( $name = false, ?int $actorId = null ) {
 		$this->mId = 0;
 		$this->mName = $name;
 		$this->mActorId = $actorId;
@@ -2164,7 +2164,7 @@ class User implements Authority, IDBAccessObject, UserIdentity, UserEmailContact
 			);
 		}
 
-		return (int)$this->mActorId;
+		return $this->mActorId;
 	}
 
 	/**
