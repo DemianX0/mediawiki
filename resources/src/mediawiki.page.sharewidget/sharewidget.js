@@ -35,6 +35,8 @@
 	function createPopup( $shareLink ) {
 		var elLink = $shareLink[0];
 		var sectionFragment = $shareLink.attr( 'href' ) || '';
+		var transcluded = sectionFragment && ( sectionFragment[0] !== '#' ); // Transcluded links have more than a fragment.
+		var popupTitle = transcluded ? 'transcludedfrom-popup-title' : 'share-popup-title';
 		var sectionTitle = $shareLink.closest( '.mw-editsection' ).siblings( '.mw-headline' ).text();
 		var wikiLink = $shareLink.attr( 'data-mw-wikilink' ) ||
 			mw.Title.newFromText( mw.config.get( 'wgPageName' ) ).getPrefixedText() + sectionFragment;
@@ -79,7 +81,7 @@
 			$content: $( '<div>' )
 				.append(
 					$( '<h4>' ).addClass( 'mw-editsection-share-popup-title' )
-						.text( mw.msg( 'share-popup-title' ) ),
+						.text( mw.msg( popupTitle ) ),
 					( copiableLink ? copiableLink.$element : null ),
 					( copiablePermalink ? copiablePermalink.$element : null ),
 					( copiableWikilink ? copiableWikilink.$element : null ),

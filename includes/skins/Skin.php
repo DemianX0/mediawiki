@@ -2200,6 +2200,23 @@ abstract class Skin extends ContextSource {
 				'title' => $shareTooltip,
 			],
 		];
+
+		if ( $pageTitle->equals( $this->getTitle() ) ) {
+			// The link targetted the current page -> no transclusion.
+			return;
+		}
+
+		// Transcluded section
+		$transcludedTitle = $pageTitle->createFragmentTarget( $sectionTitle );
+		$links['transcluded'] = [
+			'targetTitle' => $transcludedTitle,
+			'text' => $this->msg( 'transcludedfrom' )->text(),
+			'class' => 'mw-editsection-share',
+			'attribs' => [
+				'title' => $this->msg( 'transcludedfrom-tooltip' )->text(),
+				'data-mw-wikilink' => $transcludedTitle->getPrefixedText() . $transcludedTitle->getFragmentForURL(),
+			],
+		];
 	}
 
 	/**
