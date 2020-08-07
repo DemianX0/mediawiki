@@ -113,6 +113,8 @@
  * @property {Window}                window
  * @property {HTMLInputElement}      checkbox
  * @property {HTMLElement}           button
+ * @property {boolean}               isInputTypeRadio
+ * @property {string}                [groupName]
  * @property {CheckboxHackOptions}   options
  * @property {Function}              unbind
  * @property {Function}              [onChange]
@@ -143,6 +145,8 @@
  * @ignore
  */
 
+var groupLists = {};
+
 /**
  * Checkbox hack listener state.
  *
@@ -172,7 +176,17 @@
  * @ignore
  */
 function handleStateChange( self, event ) {
-	self.button.setAttribute( 'aria-expanded', self.checkbox.checked.toString() );
+	var groupList = self.groupList, groupMember;
+	if ( groupList && self.isInputTypeRadio && self.checkbox.checked ) {
+		// Unset 'aria-expanded' attribute for all other selected radios in this group.
+		for ( var i = 0; i < groupList.length; i++ ) {
+			groupMember = groupList[i];
+			groupMember.button.setAttribute( 'aria-expanded', ( groupMember.checkbox === self.checkbox ).toString() );
+		}
+	} else {
+		self.button.setAttribute( 'aria-expanded', self.checkbox.checked.toString() );
+	}
+
 	if ( self.onChange ) {
 		// Last call, therefore no exception handler. Errors will wind up to the event loop.
 		self.onChange( event );
@@ -343,7 +357,7 @@ function bindToggleOnSpaceEnter( self, listeners ) {
 		// Do not allow the browser to page down.
 		event.preventDefault();
 		if ( !enterPressed && event.which === 13 ) { // first ENTER
-			setCheckedState( self, !self.checkbox.checked, event );
+			setCheckedState( self, !self.checkbox.checked || self.isInputTypeRadio, event );
 			enterPressed = true;
 		}
 	}
@@ -357,7 +371,7 @@ function bindToggleOnSpaceEnter( self, listeners ) {
 		if ( event.which === 13 ) { // ENTER
 			enterPressed = false;
 		} else if ( event.which === 32 ) { // SPACE
-			setCheckedState( self, !self.checkbox.checked, event );
+			setCheckedState( self, !self.checkbox.checked || self.isInputTypeRadio, event );
 		}
 	}
 
@@ -415,7 +429,7 @@ function bindButtonClick( self, listeners ) {
 	function handleButtonClick( event ) {
 		var newState = !self.checkbox.checked;
 		// Don't turn off radio buttons.
-		if ( newState || self.checkbox.getAttribute( 'type' ) !== 'radio' ) {
+		if ( newState || !self.isInputTypeRadio ) {
 			event.preventDefault();
 			setCheckedState( self, newState, event );
 		}
@@ -512,11 +526,18 @@ function CheckboxHack( window, checkbox, button, options, onChange ) {
 		listeners = {}; // Release references.
 	};
 
+	this.isInputTypeRadio = ( checkbox.getAttribute( 'type' ) === 'radio' );
+	this.groupName = 	this.isInputTypeRadio && checkbox.getAttribute( 'name' );
+	if ( this.groupName ) {
+		this.groupList = groupLists[ this.groupName ] = groupLists[ this.groupName ] || [];
+		this.groupList.push( this );
+	}
+
 	bindHandleStateChange( this, listeners );
 	if ( !options.allowFocusOnClick ) {
 		bindButtonMouseDown( this, listeners );
 	}
-	if ( !options.noClickHandler && self.button !== self.checkbox ) {
+	if ( !options.noClickHandler && this.button !== this.checkbox ) {
 		bindButtonClick( this, listeners );
 	}
 	if ( !options.noKeyHandler ) {
