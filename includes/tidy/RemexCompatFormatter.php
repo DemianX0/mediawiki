@@ -43,7 +43,8 @@ class RemexCompatFormatter extends HtmlFormatter {
 		if ( isset( self::$markedEmptyElements[$name] ) && $attrs->count() === 0
 			&& strspn( $contents, "\t\n\f\r " ) === strlen( $contents )
 		) {
-			return "<{$name} class=\"mw-empty-elt\">$contents</{$name}>";
+			return '';
+			//return "<{$name} class=\"mw-empty-elt\">$contents</{$name}>";
 		}
 
 		$s = "<$name";
