@@ -1530,6 +1530,7 @@ return [
 		'messages' => [
 			'share',
 			'share-popup-title',
+			'transcludedfrom-popup-title',
 			'share-link',
 			'share-link-tooltip',
 			'share-permalink',
