@@ -521,13 +521,17 @@ class Article implements Page {
 		$outputPage->allowClickjacking();
 
 		$parserOptions = $this->getParserOptions();
-		$poOptions = [];
 		# Allow extensions to vary parser options used for article rendering
 		Hooks::runner()->onArticleParserOptions( $this, $parserOptions );
+		$poOptions = [
+			'enableSectionEditLinks' => true,
+			'enableSectionShareLinks' => $this->getContext()->getConfig()->get( 'EnableSectionHeaderShare' ),
+		];
 		# Render printable version, use printable version cache
 		if ( $outputPage->isPrintable() ) {
 			$parserOptions->setIsPrintable( true );
 			$poOptions['enableSectionEditLinks'] = false;
+			$poOptions['enableSectionShareLinks'] = false;
 			$outputPage->prependHTML(
 				Html::warningBox(
 					$outputPage->msg( 'printableversion-deprecated-warning' )->escaped()

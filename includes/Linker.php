@@ -1809,27 +1809,28 @@ class Linker {
 	 * @param string $attribs Any attributes for the headline, starting with
 	 *   a space and ending with '>'
 	 *   This *must* be at least '>' for no attribs
-	 * @param string $anchor The anchor to give the headline (the bit after the #)
+	 * @param string $anchor The anchor to give the headline (the bit after the #).
+	 *   Must be sanitized by Sanitizer::escapeIdForAttribute().
 	 * @param string $html HTML for the text of the header
 	 * @param string $link HTML to add for the section edit link
 	 * @param string|bool $fallbackAnchor A second, optional anchor to give for
 	 *   backward compatibility (false to omit)
+	 *   Must be sanitized by Sanitizer::escapeIdForAttribute().
 	 *
 	 * @return string HTML headline
 	 */
 	public static function makeHeadline( $level, $attribs, $anchor, $html,
 		$link, $fallbackAnchor = false
 	) {
-		$anchorEscaped = htmlspecialchars( $anchor );
 		$fallback = '';
 		if ( $fallbackAnchor !== false && $fallbackAnchor !== $anchor ) {
-			$fallbackAnchor = htmlspecialchars( $fallbackAnchor );
-			$fallback = "<span id=\"$fallbackAnchor\"></span>";
+			$fallback = '<span id="$fallbackAnchor"></span>' . "\n";
 		}
-		return "<h$level$attribs"
-			. "$fallback<span class=\"mw-headline\" id=\"$anchorEscaped\">$html</span>"
-			. $link
-			. "</h$level>";
+		return '<header class="mw-section--header">'
+			. $fallback
+			. "<h$level" . ' id="' . $anchor . '" class="mw-headline"' . $attribs . '> ' . $html . " </h$level>\n"
+			. $link . "\n"
+			. "</header>\n";
 	}
 
 	/**

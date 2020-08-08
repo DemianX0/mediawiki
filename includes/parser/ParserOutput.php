@@ -267,11 +267,19 @@ class ParserOutput extends CacheTime {
 	private $mMaxAdaptiveExpiry = INF;
 
 	// Matches the following
-	// <[mw:]editsection page=".*" section=".*" [anchor=".*"] [other future params...] />
-	// <[mw:]editsection [params...]>.*</[mw:]editsection>
+	// <mw:editsection pagetitle=".*" sectiontitle=".*"[ sectionnum=".*"][ sectionid=".*"]/>
+	// <mw:editsection pagetitle=".*" sectiontitle=".*"[ sectionnum=".*"][ sectionid=".*"]></mw:editsection>
+	// Tidy runs before this, possibly altering the closing tag.
 	private const EDITSECTION_REGEX =
-		'#<(?:mw:)?editsection page="(.*?)" section="(.*?)"(?| anchor="(.*?)"|())'
-		. '(?:[^>]*?)(?:/>|>(.*?)(</(?:mw:)?editsection>))#s';
+		'#<mw:editsection'
+		. '(?: pagetitle="(?P<pagetitle>[^"]*)")'
+		. '(?: sectiontitle="(?P<sectiontitle>[^"]*)")'
+		. '(?: sectionnum="(?P<sectionnum>[^"]*)")?'
+		. '(?: sectionid="(?P<sectionid>[^"]*)")?'
+		. '(?P<extra>.*?)'
+		. '(?|/>|>\s*(?P<content>.*?)\s*</mw:editsection>)#s';
+		//. '>\s*(?P<content>.*?)\s*</mw:editsection>#s';
+		//. '\s*/>#s';
 
 	// finalizeAdaptiveCacheExpiry() uses TTL = MAX( m * PARSE_TIME + b, MIN_AR_TTL)
 	// Current values imply that m=3933.333333 and b=-333.333333
@@ -359,7 +367,8 @@ class ParserOutput extends CacheTime {
 	public function getText( $options = [] ) {
 		$options += [
 			'allowTOC' => true,
-			'enableSectionEditLinks' => true,
+			'enableSectionEditLinks' => true, // FIXME: should be false, most callers don't need it.
+			'enableSectionShareLinks' => false,
 			'skin' => null,
 			'unwrap' => false,
 			'deduplicateStyles' => true,
@@ -370,23 +379,25 @@ class ParserOutput extends CacheTime {
 		Hooks::runner()->onParserOutputPostCacheTransform( $this, $text, $options );
 
 		if ( $options['wrapperDivClass'] !== '' && !$options['unwrap'] ) {
-			$text = Html::rawElement( 'div', [ 'class' => $options['wrapperDivClass'] ], $text );
+			$text = "\n" . Html::rawElement( 'div', [ 'class' => $options['wrapperDivClass'] ], "\n" . $text );
 		}
 
-		if ( $options['enableSectionEditLinks'] ) {
+		$sectionShare = $options['enableSectionShareLinks'];
+		$sectionEdit = $options['enableSectionEditLinks'];
+		if ( $sectionEdit || $sectionShare ) {
 			// TODO: Passing the skin should be required
 			$skin = $options['skin'] ?: RequestContext::getMain()->getSkin();
 
 			$text = preg_replace_callback(
 				self::EDITSECTION_REGEX,
-				function ( $m ) use ( $skin ) {
+				function ( $m ) use ( $skin, $sectionShare, $sectionEdit ) {
 					$data = [
-						'enableShareLinks' => true,
-						'enableEditLinks' => true,
-						'pageTitle' => Title::newFromText( htmlspecialchars_decode( $m[1] ) ),
-						'sectionNum' => htmlspecialchars_decode( $m[2] ),
-						'sectionTitle' => urldecode( $m[3] ),
-						'sectionID' => isset( $m[5] ) ? Sanitizer::decodeCharReferences( $m[4] ) : null,
+						'enableShareLinks' => $sectionShare,
+						'enableEditLinks' => $sectionEdit,
+						'pageTitle' => Title::newFromText( htmlspecialchars_decode( $m['pagetitle'] ) ),
+						'sectionTitle' => htmlspecialchars_decode( $m['sectiontitle'] ),
+						'sectionNum' => htmlspecialchars_decode( $m['sectionnum'] ?? '' ),
+						'sectionID' => htmlspecialchars_decode( $m['sectionid'] ?? '' ),
 					];
 
 					if ( !is_object( $data['pageTitle'] ) ) {

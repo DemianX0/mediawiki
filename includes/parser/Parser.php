@@ -4105,9 +4105,9 @@ class Parser {
 	private function finalizeHeadings( $text, $origText, $isMain = true ) {
 		# Inhibit editsection links if requested in the page
 		if ( isset( $this->mDoubleUnderscores['noeditsection'] ) ) {
-			$maybeShowEditLink = false;
+			$maybeShowShareOrEditLink = false;
 		} else {
-			$maybeShowEditLink = true; /* Actual presence will depend on post-cache transforms */
+			$maybeShowShareOrEditLink = true; /* Actual presence will depend on post-cache transforms */
 		}
 
 		# Get all headlines for numbering them and adding funky stuff like [edit]
@@ -4116,7 +4116,7 @@ class Parser {
 		# be trimmed here since whitespace in HTML headings is significant.
 		$matches = [];
 		$numMatches = preg_match_all(
-			'/<H(?P<level>[1-6])(?P<attribs>.*?>)(?P<header>[\s\S]*?)<\/H[1-6] *>/i',
+			'/<H(?P<level>[1-6])(?P<attribs>.*?)>(?P<header>[\s\S]*?)<\/H[1-6] *>/i',
 			$text,
 			$matches
 		);
@@ -4300,11 +4300,11 @@ class Parser {
 			$safeHeadline = preg_replace( '/<.*?>/', '', $safeHeadline );
 			$safeHeadline = Sanitizer::normalizeSectionNameWhitespace( $safeHeadline );
 
-			# Save headline for section edit hint before it's escaped
-			$headlineHint = $safeHeadline;
-
 			# Decode HTML entities
 			$safeHeadline = Sanitizer::decodeCharReferences( $safeHeadline );
+
+			# Save headline for section edit hint before it's escaped
+			$headlineHint = $safeHeadline;
 
 			$safeHeadline = self::normalizeSectionName( $safeHeadline );
 
@@ -4392,20 +4392,22 @@ class Parser {
 				'anchor' => $anchor,
 			];
 
+			$editlink = '';
 			# give headline the correct <h#> tag
-			if ( $maybeShowEditLink && $sectionIndex !== false ) {
+			if ( $maybeShowShareOrEditLink && $sectionIndex !== false ) {
 				// Output edit section links as markers with styles that can be customized by skins
+				$editlink = '<mw:editsection';
+
 				if ( $isTemplate ) {
 					# Put a T flag in the section identifier, to indicate to extractSections()
 					# that sections inside <includeonly> should be counted.
 					$editsectionPage = $titleText;
 					$editsectionSection = 'T-' . $sectionIndex;
-					$editsectionContent = null;
 				} else {
 					$editsectionPage = $this->getTitle()->getPrefixedText();
 					$editsectionSection = $sectionIndex;
-					$editsectionContent = $headlineHint;
 				}
+
 				// We use a bit of pesudo-xml for editsection markers. The
 				// language converter is run later on. Using a UNIQ style marker
 				// leads to the converter screwing up the tokens when it
@@ -4418,16 +4420,12 @@ class Parser {
 				// content block because the language converter is supposed to
 				// be able to convert that piece of data.
 				// Gets replaced with html in ParserOutput::getText
-				$editlink = '<mw:editsection page="' . htmlspecialchars( $editsectionPage );
-				$editlink .= '" section="' . htmlspecialchars( $editsectionSection ) . '"';
-				$editlink .= ' anchor="' . urlencode( $anchor ) . '"';
-				if ( $editsectionContent !== null ) {
-					$editlink .= '>' . $editsectionContent . '</mw:editsection>';
-				} else {
-					$editlink .= '/>';
-				}
-			} else {
-				$editlink = '';
+				$editlink .= ' pagetitle="' . htmlspecialchars( $editsectionPage )
+					. '" sectiontitle="' . htmlspecialchars( $headlineHint )
+					. '" sectionnum="' . htmlspecialchars( $editsectionSection )
+					. '" sectionid="' . htmlspecialchars( $anchor )
+					. '"></mw:editsection>'; // Tidy untidies the closing tag anyway.
+					//. '"/>';
 			}
 
 			$headlines[ $headlineCount ] = [
@@ -4493,7 +4491,7 @@ class Parser {
 			 * $section : the section number
 			 * &$sectionContent : ref to the content of the section
 			 * $maybeShowEditLinks : boolean describing whether this section has an edit link
-			$this->hookRunner->onParserSectionCreate( $this, $i, $block, $maybeShowEditLink );
+			$this->hookRunner->onParserSectionCreate( $this, $i, $block, $maybeShowShareOrEditLink );
 			 */
 
 			$heading = $headlines[ $headlineCount ] ?? null;
@@ -4501,8 +4499,9 @@ class Parser {
 			if ( $heading ) {
 				// Output only starting section tag. Closing tag is output by next section on the same level.
 				$sectionID = $heading['anchor'];
-				$headingID = $sectionID . "--h$level";
-				$headingHTML = Linker::makeHeadline( $heading['level'],
+				$level = $heading['level'];
+				$headingID = $sectionID . '--h' . $level;
+				$headingHTML = Linker::makeHeadline( $level,
 					$heading['attribs'], $headingID, $heading['headline'],
 					$heading['editlink'], $heading['fallbackAnchor'] );
 
