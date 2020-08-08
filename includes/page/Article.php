@@ -669,11 +669,15 @@ class Article implements Page {
 		$parserCache = MediaWikiServices::getInstance()->getParserCache();
 
 		$parserOptions = $this->getParserOptions();
-		$poOptions = [];
+		$poOptions = [
+			'enableSectionEditLinks' => true,
+			'enableSectionShareLinks' => $this->getContext()->getConfig()->get( 'EnableSectionHeaderShare' ),
+		];
 		# Render printable version, use printable version cache
 		if ( $outputPage->isPrintable() ) {
 			$parserOptions->setIsPrintable( true );
 			$poOptions['enableSectionEditLinks'] = false;
+			$poOptions['enableSectionShareLinks'] = false;
 			$outputPage->prependHTML(
 				Html::warningBox(
 					$outputPage->msg( 'printableversion-deprecated-warning' )->escaped()
