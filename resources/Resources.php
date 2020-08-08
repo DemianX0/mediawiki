@@ -1616,10 +1616,12 @@ return [
 		'styles' => 'resources/src/mediawiki.page.sharewidget/sharewidget.less',
 		'scripts' => 'resources/src/mediawiki.page.sharewidget/sharewidget.js',
 		'messages' => [
+			'share',
 			'share-popup-title',
-			'share-wikitext',
-			'share-url',
-			'share'
+			'share-link',
+			'share-link-tooltip',
+			'share-wikilink',
+			'share-wikilink-tooltip',
 		],
 		'dependencies' => []
 	],

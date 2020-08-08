@@ -33,19 +33,21 @@
 	function createPopup( $shareLink ) {
 		var linkWikitext = mw.Title.newFromText( mw.config.get( 'wgPageName' ) )
 			.getPrefixedText() + '#' + $shareLink.attr( 'data-mw-share-section' );
-		var copiableURL = new mw.widgets.CopyTextLayout( {
-			label: mw.msg( 'share-url' ),
+		var copiableLink = new mw.widgets.CopyTextLayout( {
+			label: mw.msg( 'share-link' ),
 			copyText: $shareLink[0].href,
 			align: 'top',
 			textInput: {
+				title: mw.msg( 'share-link-tooltip', sectionTitle ),
 				classes: [ 'mw-editfont-' + mw.user.options.get( 'editfont' ) ]
 			}
 		} ),
-		copiableWikitext = new mw.widgets.CopyTextLayout( {
-			label: mw.msg( 'share-wikitext' ),
+		copiableWikilink = new mw.widgets.CopyTextLayout( {
+			label: mw.msg( 'share-wikilink' ),
 			copyText: linkWikitext,
 			align: 'top',
 			textInput: {
+				title: mw.msg( 'share-wikilink-tooltip', sectionTitle ),
 				classes: [ 'mw-editfont-' + mw.user.options.get( 'editfont' ) ]
 			}
 		} );
@@ -56,8 +58,8 @@
 				.append(
 					$( '<h4>' ).addClass( 'mw-editsection-share-popup-title' )
 						.text( mw.msg( 'share-popup-title' ) ),
-					copiableURL.$element,
-					copiableWikitext.$element
+					copiableLink.$element,
+					copiableWikilink.$element
 				),
 			classes: [ 'mw-editsection-share' ],
 			align: 'forwards',
