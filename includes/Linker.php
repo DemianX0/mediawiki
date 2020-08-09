@@ -2130,7 +2130,17 @@ class Linker {
 	 */
 	public static function tooltipAttribs( $name, $options = null, array &$msgParams = [] ) {
 		$attribs = [];
-		$message = wfMessage( "tooltip-$name", $msgParams );
+		$message = null;
+		$options = (array)$options;
+
+		if ( in_array( 'icon-only', $options ) ) {
+			$message = wfMessage( "tooltip-icon-$name", $msgParams );
+			if ( !$message->exists() ) {
+				$message = null;
+			}
+		}
+		$message = $message ?? wfMessage( "tooltip-$name", $msgParams );
+
 		if ( !$message->exists() ) {
 			$tooltip = null;
 		} else {
@@ -2142,8 +2152,6 @@ class Linker {
 				$tooltip = null;
 			}
 		}
-
-		$options = (array)$options;
 
 		if ( in_array( 'nonexisting', $options ) ) {
 			$tooltip = wfMessage( 'red-link-title', $tooltip ?: '' )->text();
