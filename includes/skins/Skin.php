@@ -2409,7 +2409,10 @@ abstract class Skin extends ContextSource {
 			}
 
 			if ( isset( $item['single-id'] ) ) {
-				$tooltipOption = isset( $item['exists'] ) && $item['exists'] === false ? 'nonexisting' : null;
+				$tooltipOption = ( $item['exists'] ?? null ) === false ? ['nonexisting'] : [];
+				if ( !( $item['text'] ?? null ) ) {
+					array_push( $tooltipOption, 'icon-only' );
+				}
 
 				if ( isset( $item['tooltiponly'] ) && $item['tooltiponly'] ) {
 					$title = Linker::titleAttrib( $item['single-id'], $tooltipOption, $tooltipParams );
