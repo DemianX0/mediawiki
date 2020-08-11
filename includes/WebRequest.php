@@ -907,25 +907,22 @@ class WebRequest {
 	 */
 	public static function getGlobalRequestURL() {
 		// This method is called on fatal errors; it should not depend on anything complex.
-
-		if ( isset( $_SERVER['REQUEST_URI'] ) && strlen( $_SERVER['REQUEST_URI'] ) ) {
-			$base = $_SERVER['REQUEST_URI'];
-		} elseif ( isset( $_SERVER['HTTP_X_ORIGINAL_URL'] )
-			&& strlen( $_SERVER['HTTP_X_ORIGINAL_URL'] )
-		) {
-			// Probably IIS; doesn't set REQUEST_URI
-			$base = $_SERVER['HTTP_X_ORIGINAL_URL'];
-		} elseif ( isset( $_SERVER['SCRIPT_NAME'] ) ) {
-			$base = $_SERVER['SCRIPT_NAME'];
-			if ( isset( $_SERVER['QUERY_STRING'] ) && $_SERVER['QUERY_STRING'] != '' ) {
-				$base .= '?' . $_SERVER['QUERY_STRING'];
+		$base = $_SERVER['REQUEST_URI'] ?? null;
+		$base = $base ?: ( $_SERVER['HTTP_X_ORIGINAL_URL'] ?? null ); // Probably IIS; doesn't set REQUEST_URI
+		if ( !$base ) {
+			$base = $_SERVER['SCRIPT_NAME'] ?? null;
+			$query = $_SERVER['QUERY_STRING'] ?? null;
+			if ( $base && $query ) {
+				$base .= '?' . $query;
 			}
-		} else {
+		}
+		if ( !$base ) {
 			// This shouldn't happen!
 			throw new MWException( "Web server doesn't provide either " .
 				"REQUEST_URI, HTTP_X_ORIGINAL_URL or SCRIPT_NAME. Report details " .
 				"of your web server configuration to https://phabricator.wikimedia.org/" );
 		}
+
 		// User-agents should not send a fragment with the URI, but
 		// if they do, and the web server passes it on to us, we
 		// need to strip it or we get false-positive redirect loops
