@@ -257,11 +257,7 @@ class NamespaceInfo {
 			return false;
 		}
 
-		if ( $target->getNamespace() < NS_MAIN ) {
-			return false;
-		}
-
-		return true;
+		return ( $target->getNamespace() >= NS_MAIN );
 	}
 
 	/**
@@ -435,7 +431,7 @@ class NamespaceInfo {
 	public function getValidNamespaces() {
 		if ( $this->validNamespaces === null ) {
 			$this->validNamespaces = [];
-			foreach ( array_keys( $this->getCanonicalNamespaces() ) as $ns ) {
+			foreach ( $this->getCanonicalNamespaces() as $ns => $name ) {
 				if ( $ns >= 0 ) {
 					$this->validNamespaces[] = $ns;
 				}
