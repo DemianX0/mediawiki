@@ -542,6 +542,11 @@
 				//
 				sources = Object.create( null ),
 
+				// For doRequest()
+				RLUseFilenamesInURL = $VARS.wgRLUseFilenamesInURL,
+				RLSubpaths = $VARS.wgRLSubpaths,
+				RLSeparators = $VARS.wgRLSeparators,
+
 				// For queueModuleScript()
 				handlingPendingRequests = false,
 				pendingRequests = [],
@@ -1428,7 +1433,32 @@
 				// else: runScript will get called via cssHandle()
 			}
 
-			function sortQuery( o ) {
+			// Order same as in ResourceLoader::makeLoaderQuery()
+			var queryOrder = [
+				'modules',
+				'skin',
+				'lang',
+				'user',
+				'printable',
+				'handheld',
+				'only',
+				'version',
+				'debug',
+				'raw',
+			];
+
+			function sortQuery( query ) {
+				var key, sorted = {};
+				for ( var i = 0; i < queryOrder.length; i++ ) {
+					key = queryOrder[ i ];
+					if ( key in query ) {
+						sorted[ key ] = query[ key ];
+					}
+				}
+				return sorted;
+			}
+
+			function sortQueryAlphabetic( o ) {
 				var key,
 					sorted = {},
 					a = [];
@@ -1437,8 +1467,9 @@
 					a.push( key );
 				}
 				a.sort();
-				for ( key = 0; key < a.length; key++ ) {
-					sorted[ a[ key ] ] = o[ a[ key ] ];
+				for ( var i = 0; i < a.length; i++ ) {
+					key = a[ i ];
+					sorted[ key ] = o[ key ];
 				}
 				return sorted;
 			}
@@ -1456,14 +1487,16 @@
 			 *
 			 * @private
 			 * @param {Object} moduleMap Module map
+			 * @param {string} sep Separator, default: '|', since 1.36
 			 * @return {Object}
 			 * @return {string} return.str Module query string
 			 * @return {Array} return.list List of module names in matching order
 			 */
-			function buildModulesString( moduleMap ) {
+			function buildModulesString( moduleMap, sep ) {
 				var p, prefix,
 					str = [],
 					list = [];
+				sep = sep || '|';
 
 				function restore( suffix ) {
 					return p + suffix;
@@ -1475,7 +1508,7 @@
 					list.push.apply( list, moduleMap[ prefix ].map( restore ) );
 				}
 				return {
-					str: str.join( '|' ),
+					str: str.join( sep ),
 					list: list
 				};
 			}
@@ -1508,14 +1541,80 @@
 			}
 
 			/**
+			 * Helper for createResourcePath()
+			 * @since 1.36
+			 * @private
+			 * @param {string} modules Modules list serialized.
+			 * @return {string} Modules list encoded for use in URL.
+			 */
+			function encodeURIModules( modules ) {
+				// Not using encodeURIComponent() to avoid encoding: ", / ? : @ = + $".
+				return encodeURI( modules ).replace( [ '&', '#' ], [ '%26', '%23' ] );
+			}
+
+			/**
+			 * Port of ResourceLoader::createResourcePath()
+			 * @since 1.36
+			 * @private
+			 * @param {Object} query Map of parameter names to values
+			 * @return {string}
+			 */
+			function createResourcePath( query ) {
+				var
+					// Don't encode: ", / ? : @ = + $"
+					path = encodeURIModules( query.modules ),
+					type = '.js', value, skip,
+					sep = '', noSep = true;
+				delete query.modules;
+
+				switch ( query.only ) {
+					case 'styles' : type = '.css'; break;
+					case 'scripts' : type = '.js'; break;
+					default : query.withcss = true; break; // Will be last in the order.
+				}
+				delete query.only;
+
+				path = path + RLSeparators.query;
+				for ( var key in query ) {
+					value = query[ key ];
+					if ( key === 'debug' && value
+						|| key === 'raw' && value ) {
+						value = true;
+					}
+					skip = false;
+					if ( value === true ) {
+						path = path + sep + encodeURIComponent( key );
+					} else if ( value === false || value === null ) {
+						skip = true;
+					} else {
+						path = path + sep + encodeURIComponent( key ) + '=' + encodeURIComponent( value );
+					}
+					if ( noSep && !skip ) {
+						// No separator before first parameter.
+						sep = RLSeparators.param;
+						noSep = false;
+					}
+				}
+				return path + type;
+			}
+
+			/**
 			 * @private
 			 * @param {Object} params Map of parameter names to values
 			 * @return {string}
 			 */
 			function makeQueryString( params ) {
-				return Object.keys( params ).map( function ( key ) {
-					return encodeURIComponent( key ) + '=' + encodeURIComponent( params[ key ] );
-				} ).join( '&' );
+				// Don't encode: ", / ? : @ = + $"
+				var value = encodeURIModules( params.modules ),
+					query = [ 'modules=' + value ],
+					param;
+				delete params.modules;
+				for ( var key in params ) {
+					value = params[ key ];
+					param = encodeURIComponent( key ) + '=' + encodeURIComponent( value );
+					query.push( param );
+				}
+				return query.join( '&' );
 			}
 
 			/**
@@ -1542,7 +1641,7 @@
 				function doRequest() {
 					// Optimisation: Inherit (Object.create), not copy ($.extend)
 					var query = Object.create( currReqBase ),
-						packed = buildModulesString( moduleMap );
+						packed = buildModulesString( moduleMap, RLUseFilenamesInURL ? RLSeparators.module : '|' );
 					query.modules = packed.str;
 					// The packing logic can change the effective order, even if the input was
 					// sorted. As such, the call to getCombinedVersion() must use this
@@ -1551,7 +1650,11 @@
 					// combining versions from the module query string in-order. (T188076)
 					query.version = getCombinedVersion( packed.list );
 					query = sortQuery( query );
-					addScript( sourceLoadScript + '?' + makeQueryString( query ) );
+					if ( RLUseFilenamesInURL ) {
+						addScript( sourceLoadScript + RLSubpaths.modules + createResourcePath( query ) );
+					} else {
+						addScript( sourceLoadScript + '?' + makeQueryString( query ) );
+					}
 				}
 
 				if ( !batch.length ) {
@@ -1597,7 +1700,7 @@
 						}
 
 						// In addition to currReqBase, doRequest() will also add 'modules' and 'version'.
-						// > '&modules='.length === 9
+						// > '&modules='.length === 9, same as '/modules/'.length
 						// > '&version=12345'.length === 14
 						// > 9 + 14 = 23
 						currReqBaseLength = makeQueryString( currReqBase ).length + 23;
