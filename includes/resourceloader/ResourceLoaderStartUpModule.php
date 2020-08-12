@@ -371,6 +371,9 @@ class ResourceLoaderStartUpModule extends ResourceLoaderModule {
 			'$VARS.reqBase' => $context->encodeJson( (object)$context->getReqBase() ),
 			'$VARS.baseModules' => $context->encodeJson( $this->getBaseModules() ),
 			'$VARS.maxQueryLength' => $context->encodeJson( $this->getMaxQueryLength() ),
+			'$VARS.wgRLUseFilenamesInURL' => $context->encodeJson( $conf->get( 'RLUseFilenamesInURL' ) ),
+			'$VARS.wgRLSubpaths' => $context->encodeJson( $conf->get( 'RLSubpaths' ) ),
+			'$VARS.wgRLSeparators' => $context->encodeJson( $conf->get( 'RLSeparators' ) ),
 			// The client-side module cache can be disabled by site configuration.
 			// It is also always disabled in debug mode.
 			'$VARS.storeEnabled' => $context->encodeJson(
