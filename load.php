@@ -25,36 +25,10 @@
  * @author Trevor Parscal
  */
 
-use MediaWiki\MediaWikiServices;
-
 // This endpoint is supposed to be independent of request cookies and other
 // details of the session. Enforce this constraint with respect to session use.
 define( 'MW_NO_SESSION', 1 );
-
 define( 'MW_ENTRY_POINT', 'load' );
-
 require __DIR__ . '/includes/WebStart.php';
 
-wfLoadMain();
-
-function wfLoadMain() {
-	global $wgRequest;
-
-	// Disable ChronologyProtector so that we don't wait for unrelated MediaWiki
-	// writes when getting database connections for ResourceLoader. (T192611)
-	MediaWikiServices::getInstance()->getDBLoadBalancerFactory()->disableChronologyProtection();
-
-	$resourceLoader = MediaWikiServices::getInstance()->getResourceLoader();
-	$context = new ResourceLoaderContext( $resourceLoader, $wgRequest );
-	MediaWikiServices::getInstance()->redefineService( 'MessageLocalizer', function () use ( $context ) {
-		return $context;
-	} );
-
-	// Respond to ResourceLoader request
-	$resourceLoader->respond( $context );
-
-	Profiler::instance()->setAllowOutput();
-
-	$mediawiki = new MediaWiki();
-	$mediawiki->doPostOutputShutdown();
-}
+MediaWiki\EntryPoint\ResourceLoaderEntryPoint::main();
