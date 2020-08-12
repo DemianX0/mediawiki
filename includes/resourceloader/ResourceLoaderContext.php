@@ -69,25 +69,84 @@ class ResourceLoaderContext implements MessageLocalizer, IMessageContext {
 	/**
 	 * @param ResourceLoader $resourceLoader
 	 * @param WebRequest $request
+	 * @throws BadURLError
 	 */
 	public function __construct( ResourceLoader $resourceLoader, WebRequest $request ) {
 		$this->resourceLoader = $resourceLoader;
 		$this->request = $request;
 		$this->logger = $resourceLoader->getLogger();
 
+		$path = $request->getEntryPointSubpath();
+		if ( $path ) {
+			$this->parsePath( $path );
+		}
+		$this->parseParams( $request );
+	}
+
+	/**
+	 * @param string $path relative to the entry point.
+	 * @throws BadURLError
+	 */
+	private function parsePath( $path ) {
+		global $wgRLSubpaths;
+		if ( $subpath = wfRemovePrefix( $path, $wgRLSubpaths->modules ) ) {
+			$this->parseModulesPath( $subpath );
+		} else {
+			throw new BadURLError( $path );
+		}
+	}
+
+	/**
+	 * @param string $path relative to modules load path ('.../modules/').
+	 * @throws BadURLError
+	 */
+	private function parseModulesPath( $path ) {
+		$request = $this->request;
+		global $wgRLSeparators;
+		$filename = wfStrRSplit( $path, '.', $type, false );
+		$modulesPart = wfStrRSplit( $filename, $wgRLSeparators->query, $paramsPart, false );
+		/*
+		print 'filename: ' . ($filename ?? '') . BR;
+		print 'type: ' . ($type ?? '') . BR;
+		print 'modulesPart: ' . ($modulesPart ?? '') . BR;
+		*/
+
+		//$paramsUrlFormat = str_replace( [ $wgRLSeparators->param, '-' ], [ '&', '=' ], $parts->params ?? '' );
+		$paramsUrlFormat = str_replace( $wgRLSeparators->param, '&', $paramsPart ?? '' );
+		parse_str( $paramsUrlFormat, $params );
+		$request->overrideQueryAndPathParams( $params );
+		$params = (object)$params;
+
+		//$request->setVal( 'modules', $parts->modules );
+		$this->modules = ResourceLoader::expandModuleNames( $modulesPart, $wgRLSeparators->module );
+
+		$only = null;
+		switch ( $type ) {
+			case 'css':  $only = 'styles';  break;
+			case 'js':   $only = isset( $params->withcss ) ? '' : 'scripts';  break;
+			default:  throw new BadURLError( [ $type ?? '', 'css/js' ], 'badurl-wrong-extension' );
+		}
+		$this->only = $only;
+		$this->debug = isset( $params->debug );
+		$this->raw = isset( $params->raw );
+	}
+
+	private function parseParams( WebRequest $request ) {
 		// Optimisation: Use WebRequest::getRawVal() instead of getVal(). We don't
 		// need the slow Language+UTF logic meant for user input here. (f303bb9360)
 
 		// List of modules
-		$modules = $request->getRawVal( 'modules' );
-		$this->modules = $modules ? ResourceLoader::expandModuleNames( $modules ) : [];
+		if ( !$this->modules ) {
+			$modules = $request->getRawVal( 'modules' );
+			$this->modules = $modules ? ResourceLoader::expandModuleNames( $modules ) : [];
+		}
 
 		// Various parameters
 		$this->user = $request->getRawVal( 'user' );
-		$this->debug = self::debugFromString( $request->getRawVal( 'debug' ) );
-		$this->only = $request->getRawVal( 'only' );
+		$this->debug = $this->debug ?? self::debugFromString( $request->getRawVal( 'debug' ) );
+		$this->only =  $this->only ?? $request->getRawVal( 'only' );
 		$this->version = $request->getRawVal( 'version' );
-		$this->raw = $request->getFuzzyBool( 'raw' );
+		$this->raw = $this->raw ?? $request->getFuzzyBool( 'raw' );
 
 		// Image requests
 		$this->image = $request->getRawVal( 'image' );

@@ -484,6 +484,27 @@ function wfRemovePrefix( ?string $full, string $prefix ) : ?string {
 }
 
 /**
+ * Split a string at the last separator. Returns both parts.
+ *
+ * @param string $full The string to split.
+ * @param string $separator The separator where the input is split.
+ * @param ?string &$right OUT (optional) Second part after the separator or null if there's no separator.
+ * @param bool $includeSeparator (optional) Include the separator in the second part.
+ * @return First part (not including separator) or the while input if there's no separator.
+ */
+function wfStrRSplit( string $full, string $separator, ?string &$right = null, bool $includeSeparator = false ) : string {
+	$splitPos = strrpos( $full, $separator );
+	if ( $splitPos !== false ) {
+		$skip = $includeSeparator ? 0 : strlen( $separator );
+		$right = substr( $full, $splitPos + $skip );
+		return substr( $full, 0, $splitPos );
+	} else {
+		$right = null;
+		return $full;
+	}
+}
+
+/**
  * Expand a potentially local URL to a fully-qualified URL. Assumes $wgServer
  * is correct.
  *

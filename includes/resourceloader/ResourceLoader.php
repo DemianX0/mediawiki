@@ -1716,11 +1716,12 @@ MESSAGE;
 	 *
 	 * @since 1.33
 	 * @param string $modules Packed module name list
+	 * @param string $sep Separator, default: '|', since 1.36
 	 * @return string[] Array of module names
 	 */
-	public static function expandModuleNames( $modules ) {
+	public static function expandModuleNames( $modules, $sep = '|' ) {
 		$retval = [];
-		$exploded = explode( '|', $modules );
+		$exploded = explode( $sep, $modules );
 		foreach ( $exploded as $group ) {
 			if ( strpos( $group, ',' ) === false ) {
 				// This is not a set of modules in foo.bar,baz notation

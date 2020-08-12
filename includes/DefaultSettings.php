@@ -212,6 +212,27 @@ $wgScript = false;
 $wgLoadScript = false;
 
 /**
+ * Subpath of modules in RL entry point for human-readable resource loader URLs.
+ * @since 1.36
+ */
+$wgRLSubpaths = (object)[
+	'modules' => '/modules/',
+];
+
+/**
+ * Separators for human-readable resource loader URLs.
+ * @since 1.36
+ */
+$wgRLSeparators = (object)[
+	// Between module names:
+	'module' => '--',
+	// Before query params:
+	'query' => '...',
+	// Between query params:
+	'param' => '..',
+];
+
+/**
  * The URL path to the REST API
  * Defaults to "{$wgScriptPath}/rest.php"
  * @since 1.34

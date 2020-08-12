@@ -364,6 +364,7 @@
 	"badtitle": "Bad title",
 	"badtitletext": "The requested page title was invalid, empty, or an incorrectly linked inter-language or inter-wiki title.\nIt may contain one or more characters that cannot be used in titles.",
 	"badurl": "Unknown URL",
+	"badurl-wrong-extension": "Wrong file extension '$1', must be '$2'",
 	"badurltext": "Invalid path: '$1'",
 	"title-invalid": "The requested page title is invalid",
 	"title-invalid-empty": "The requested page title is empty or contains only the name of a namespace.",

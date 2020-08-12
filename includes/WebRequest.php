@@ -508,6 +508,12 @@ class WebRequest {
 			}
 		}
 
+		if ( $matches ) {
+			$this->overrideQueryAndPathParams( $matches );
+		}
+	}
+
+	public function overrideQueryAndPathParams( $matches ) {
 		foreach ( $matches as $key => $val ) {
 			$this->data[$key] = $this->queryAndPathParams[$key] = $val;
 		}
