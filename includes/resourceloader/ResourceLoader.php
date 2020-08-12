@@ -1852,23 +1852,14 @@ MESSAGE;
 		// match the defaults assumed by ResourceLoaderContext.
 		// Note: This relies on the defaults either being insignificant or forever constant,
 		// as otherwise cached urls could change in meaning when the defaults change.
-		if ( $lang !== ResourceLoaderContext::DEFAULT_LANG ) {
-			$query['lang'] = $lang;
-		}
 		if ( $skin !== ResourceLoaderContext::DEFAULT_SKIN ) {
 			$query['skin'] = $skin;
 		}
-		if ( $debug !== ResourceLoaderContext::DEBUG_OFF ) {
-			$query['debug'] = strval( $debug );
+		if ( $lang !== ResourceLoaderContext::DEFAULT_LANG ) {
+			$query['lang'] = $lang;
 		}
 		if ( $user !== null ) {
 			$query['user'] = $user;
-		}
-		if ( $version !== null ) {
-			$query['version'] = $version;
-		}
-		if ( $only !== null ) {
-			$query['only'] = $only;
 		}
 		if ( $printable ) {
 			$query['printable'] = 1;
@@ -1876,10 +1867,19 @@ MESSAGE;
 		if ( $handheld ) {
 			$query['handheld'] = 1;
 		}
-		$query += $extraQuery;
+		if ( $only !== null ) {
+			$query['only'] = $only;
+		}
+		if ( $version !== null ) {
+			$query['version'] = $version;
+		}
+		if ( $debug !== ResourceLoaderContext::DEBUG_OFF ) {
+			$query['debug'] = strval( $debug );
+		}
+		$query += $extraQuery; // $query['raw']
 
 		// Make queries uniform in order
-		ksort( $query );
+		//ksort( $query );
 		return $query;
 	}
 
