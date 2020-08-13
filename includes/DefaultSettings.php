@@ -212,6 +212,14 @@ $wgScript = false;
 $wgLoadScript = false;
 
 /**
+ * Use human-readable resource loader URLs instead of query params.
+ *
+ * Defaults to false.
+ * @since 1.36
+ */
+$wgRLUseFilenamesInURL = false;
+
+/**
  * Subpath of modules in RL entry point for human-readable resource loader URLs.
  * @since 1.36
  */
@@ -225,11 +233,11 @@ $wgRLSubpaths = (object)[
  */
 $wgRLSeparators = (object)[
 	// Between module names:
-	'module' => '--',
+	'module' => '...',
 	// Before query params:
-	'query' => '...',
+	'query' => '---',
 	// Between query params:
-	'param' => '..',
+	'param' => '--',
 ];
 
 /**

@@ -1688,9 +1688,10 @@ MESSAGE;
 	 * on the client-side.
 	 *
 	 * @param string[] $modules List of module names (strings)
+	 * @param string $sep Separator, default: '|', since 1.36
 	 * @return string Packed query string
 	 */
-	public static function makePackedModulesString( array $modules ) {
+	public static function makePackedModulesString( array $modules, string $sep = '|' ) {
 		$moduleMap = []; // [ prefix => [ suffixes ] ]
 		foreach ( $modules as $module ) {
 			$pos = strrpos( $module, '.' );
@@ -1704,7 +1705,7 @@ MESSAGE;
 			$p = $prefix === '' ? '' : $prefix . '.';
 			$arr[] = $p . implode( ',', $suffixes );
 		}
-		return implode( '|', $arr );
+		return implode( $sep, $arr );
 	}
 
 	/**
@@ -1793,10 +1794,67 @@ MESSAGE;
 	public function createLoaderURL( $source, ResourceLoaderContext $context,
 		array $extraQuery = []
 	) {
-		$query = self::createLoaderQuery( $context, $extraQuery );
+		// URL to resource loader entry point (.../w/load.php or virtual path).
 		$script = $this->getLoadScript( $source );
 
+		global $wgRLUseFilenamesInURL, $wgRLSubpaths, $wgRLSeparators;
+		if ( $wgRLUseFilenamesInURL && strpos( $script, '?' ) === false ) {
+			$query = self::createLoaderQuery( $context, $extraQuery, $wgRLSeparators->module );
+			return $script . $wgRLSubpaths->modules . self::createResourcePath( $query );
+		}
+
+		// Query parameters array.
+		$query = self::createLoaderQuery( $context, $extraQuery );
 		return wfAppendQuery( $script, $query );
+	}
+
+	/**
+	 * Helper for createLoaderURL()
+	 *
+	 * @since 1.36
+	 * @param array $query The resource defining parameters.
+	 * @return string URL to the resource.
+	 * @throws InvalidArgumentException If non-(string or bool) query value is passed.
+	 */
+	protected static function createResourcePath( $query ) {
+		$path = $query['modules'];
+		unset( $query['modules'] );
+
+		$type = '.js';
+		switch ( $query['only'] ?? null ) {
+			case 'styles' : $type = '.css'; break;
+			case 'scripts' : $type = '.js'; break;
+			default : $query['withcss'] = true; break; // Will be last in the order.
+		}
+		unset( $query['only'] );
+
+		// If query would be empty (which doesn't happen) then the returned path will be: '<modules>--.js' 
+		global $wgRLSeparators;
+		$path .= $wgRLSeparators->query;
+		$sep = '';
+		$noSep = true;
+		foreach ( $query as $key => $value ) {
+			if ( $key === 'debug' && $value === 'true'
+				|| $key === 'raw' && $value == '1' ) {
+				$value = true;
+			}
+			$skip = false;
+			if ( is_string( $value ) || is_int( $value ) ) {
+				$path .= $sep . urlencode( $key ) . '=' . urlencode( $value );
+			} elseif ( $value === true ) {
+				$path .= $sep . urlencode( $key );
+			} elseif ( $value === false || $value === null ) {
+				$skip = true;
+			} else {
+				throw new InvalidArgumentException( "Query value must be string, int or bool. [$key] = ({gettype($value)})'$value'" );
+			}
+			if ( $noSep && !$skip ) {
+				// No separator before first parameter.
+				$sep = $wgRLSeparators->param;
+				$noSep = false;
+			}
+		}
+		return $path . $type;
 	}
 
 	/**
@@ -1806,10 +1864,11 @@ MESSAGE;
 	 * @see makeLoaderQuery
 	 * @param ResourceLoaderContext $context
 	 * @param array $extraQuery
+	 * @param string $sep Separator, default: '|', since 1.36
 	 * @return array
 	 */
 	protected static function createLoaderQuery(
-		ResourceLoaderContext $context, array $extraQuery = []
+		ResourceLoaderContext $context, array $extraQuery = [], string $sep = '|'
 	) {
 		return self::makeLoaderQuery(
 			$context->getModules(),
@@ -1821,7 +1880,8 @@ MESSAGE;
 			$context->getOnly(),
 			$context->getRequest()->getBool( 'printable' ),
 			$context->getRequest()->getBool( 'handheld' ),
-			$extraQuery
+			$extraQuery,
+			$sep
 		);
 	}
 
@@ -1839,14 +1899,15 @@ MESSAGE;
 	 * @param bool $printable
 	 * @param bool $handheld
 	 * @param array $extraQuery
+	 * @param string $sep Separator, default: '|', since 1.36
 	 * @return array
 	 */
 	public static function makeLoaderQuery( array $modules, $lang, $skin, $user = null,
 		$version = null, $debug = ResourceLoaderContext::DEBUG_OFF, $only = null,
-		$printable = false, $handheld = false, array $extraQuery = []
+		$printable = false, $handheld = false, array $extraQuery = [], string $sep = '|'
 	) {
 		$query = [
-			'modules' => self::makePackedModulesString( $modules ),
+			'modules' => self::makePackedModulesString( $modules, $sep ),
 		];
 		// Keep urls short by omitting query parameters that
 		// match the defaults assumed by ResourceLoaderContext.
