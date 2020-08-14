@@ -66,6 +66,12 @@ class WebRequest {
 	protected $headers = [];
 
 	/**
+	 * Web request URL if failed to parse.
+	 * @var ?string
+	 */
+	protected $badPath;
+
+	/**
 	 * Flag to make WebRequest::getHeader return an array of values.
 	 * @since 1.26
 	 */
@@ -140,6 +146,8 @@ class WebRequest {
 	 * used by WebRequest::interpolateTitle, for index.php requests.
 	 * Consider using WebRequest::getRequestPathSuffix for other path-related use cases.
 	 *
+	 * Deprecated since 1.36: always called with 'title',
+	 * default 'all' is pointless: matched '/w/index.php' as title.
 	 * @param string $want If this is not 'all', then the function
 	 * will return an empty array if it determines that the URL is
 	 * inside a rewrite path.
@@ -148,32 +156,33 @@ class WebRequest {
 	 * @throws FatalError If invalid routes are configured (T48998)
 	 */
 	protected static function getPathInfo( $want = 'all' ) {
-		// PATH_INFO is mangled due to https://bugs.php.net/bug.php?id=31892
-		// And also by Apache 2.x, double slashes are converted to single slashes.
-		// So we will use REQUEST_URI if possible.
-		if ( isset( $_SERVER['REQUEST_URI'] ) ) {
-			// Slurp out the path portion to examine...
-			$url = $_SERVER['REQUEST_URI'];
-			if ( !preg_match( '!^https?://!', $url ) ) {
-				$url = 'http://unused' . $url;
-			}
-			$a = parse_url( $url );
-			if ( !$a ) {
-				return [];
-			}
-			$path = $a['path'] ?? '';
+		$path = parse_url( self::getGlobalRequestURL(), PHP_URL_PATH );
+		if ( $path ) {
+			return self::getPathMatches( $path );
+		} else {
+			$pathInfo = self::getGlobalRequestPathInfo();
+			return $pathInfo === null ? null : [ 'title' => $pathInfo ];
+		}
+	}
 
-			global $wgScript;
-			if ( $path == $wgScript && $want !== 'all' ) {
-				// Script inside a rewrite path?
-				// Abort to keep from breaking...
-				return [];
+	/**
+	 * Extract relevant query arguments from $path.
+	 *
+	 * @internal This has many odd special cases and so should only be used by
+	 *   interpolateTitle() for index.php. Instead try getRequestPathSuffix().
+	 *
+	 * @param string $path to parse.
+	 *
+	 * @return array Any query arguments found in path matches.
+	 * @throws FatalError If invalid routes are configured (T48998)
+	 */
+	public static function getPathMatches( $path ) {
+		{ // Keeping indent to retain git blame history.
+			if ( $path === '' || $path === '/' ) {
+				return []; // Meaning: successful parse, no title given, redirect to Main_Page.
 			}
 
 			$router = new PathRouter;
-
-			// Raw PATH_INFO style
-			$router->add( "$wgScript/$1" );
 
 			global $wgArticlePath;
 			if ( $wgArticlePath ) {
@@ -205,20 +214,6 @@ class WebRequest {
 			Hooks::runner()->onWebRequestPathInfoRouter( $router );
 
 			$matches = $router->parse( $path );
-		} else {
-			global $wgUsePathInfo;
-			$matches = [];
-			if ( $wgUsePathInfo ) {
-				if ( !empty( $_SERVER['ORIG_PATH_INFO'] ) ) {
-					// Mangled PATH_INFO
-					// https://bugs.php.net/bug.php?id=31892
-					// Also reported when ini_get('cgi.fix_pathinfo')==false
-					$matches['title'] = substr( $_SERVER['ORIG_PATH_INFO'], 1 );
-				} elseif ( !empty( $_SERVER['PATH_INFO'] ) ) {
-					// Regular old PATH_INFO yay
-					$matches['title'] = substr( $_SERVER['PATH_INFO'], 1 );
-				}
-			}
 		}
 
 		return $matches;
@@ -244,6 +239,7 @@ class WebRequest {
 		} else {
 			$requestPath = $requestUrl;
 		}
+		//$requestPath = self::parseURLPath( self::getGlobalRequestURL() );
 		if ( substr( $requestPath, 0, strlen( $basePath ) ) !== $basePath ) {
 			return false;
 		}
@@ -383,6 +379,11 @@ class WebRequest {
 		}
 
 		$matches = self::getPathInfo( 'title' );
+		if ( $matches === null ) {
+			$this->badPath = $_SERVER[ 'REQUEST_URI' ] ?? $_SERVER[ 'PATH_INFO' ] ?? '<unknown>';
+			return;
+		}
+
 		foreach ( $matches as $key => $val ) {
 			$this->data[$key] = $this->queryAndPathParams[$key] = $val;
 		}
@@ -950,6 +951,15 @@ class WebRequest {
 	 */
 	public function getRequestURL() {
 		return self::getGlobalRequestURL();
+	}
+
+	/**
+	 * Return the request path if failed to parse.
+	 *
+	 * @return ?string
+	 */
+	public function getBadPath() : ?string {
+		return $this->badPath;
 	}
 
 	/**
