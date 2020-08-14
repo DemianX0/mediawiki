@@ -265,11 +265,8 @@ class PathRouter {
 			$matches = $this->internalParse( $path );
 		}
 
-		// We know the difference between null (no matches) and
-		// [] (a match with no data) but our WebRequest caller
-		// expects [] even when we have no matches so return
-		// a [] when we have null
-		return $matches ?? [];
+		// Since 1.36: WebRequest is expected to handle null return for no matches.
+		return $matches;
 	}
 
 	/**

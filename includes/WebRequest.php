@@ -65,6 +65,12 @@ class WebRequest {
 	protected $headers = [];
 
 	/**
+	 * Web request URL if failed to parse.
+	 * @var ?string
+	 */
+	protected $badPath;
+
+	/**
 	 * Flag to make WebRequest::getHeader return an array of values.
 	 * @since 1.26
 	 */
@@ -161,13 +167,23 @@ class WebRequest {
 			}
 			$path = $a['path'] ?? '';
 
-			global $wgScript;
-			if ( $path == $wgScript && $want !== 'all' ) {
-				// Script inside a rewrite path?
-				// Abort to keep from breaking...
-				return [];
+	/**
+	 * Extract relevant query arguments from $path.
+	 *
+	 * @internal This has many odd special cases and so should only be used by
+	 *   interpolateTitle() for index.php. Instead try getRequestPathSuffix().
+	 *
+	 * @param string $path to parse.
+	 *
+	 * @return array Any query arguments found in path matches.
+	 * @throws FatalError If invalid routes are configured (T48998)
+	 */
+	public static function getPathMatches( $path ) {
+		{ // Keeping indent to retain git blame history.
+			if ( $path === '' || $path === '/' ) {
+				return []; // Meaning: successful parse, no title given, redirect to Main_Page.
 			}
-
+ 
 			$router = new PathRouter;
 
 			// Raw PATH_INFO style
@@ -205,7 +221,7 @@ class WebRequest {
 			$matches = $router->parse( $path );
 		} else {
 			global $wgUsePathInfo;
-			$matches = [];
+			$matches = null;
 			if ( $wgUsePathInfo ) {
 				if ( !empty( $_SERVER['ORIG_PATH_INFO'] ) ) {
 					// Mangled PATH_INFO
@@ -382,6 +398,11 @@ class WebRequest {
 		}
 
 		$matches = self::getPathInfo( 'title' );
+		if ( $matches === null ) {
+			$this->badPath = $_SERVER[ 'REQUEST_URI' ] ?? $_SERVER[ 'PATH_INFO' ] ?? '<unknown>';
+			return;
+		}
+
 		foreach ( $matches as $key => $val ) {
 			$this->data[$key] = $this->queryAndPathParams[$key] = $val;
 		}
@@ -950,6 +971,15 @@ class WebRequest {
 	 */
 	public function getRequestURL() {
 		return self::getGlobalRequestURL();
+	}
+
+	/**
+	 * Return the request path if failed to parse.
+	 *
+	 * @return ?string
+	 */
+	public function getBadPath() : ?string {
+		return $this->badPath;
 	}
 
 	/**
