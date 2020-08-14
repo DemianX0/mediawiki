@@ -457,10 +457,23 @@ class WebRequest {
 			return;
 		}
 
-		$matches = self::getPathInfo( 'title' );
+		// Since 1.36: change from getPathInfo():
+		// entryPointSubpath prioritizes the URL part after 'index.php/' (PATH_INFO)
+		// - if enabled and available - over REQUEST_URI, allowing
+		// the rewrite of the parsed subpath in the `.htaccess` file.
+		$matches = self::getPathMatches( $this->entryPointSubpath );
+
+		// Backwards compatibility: use whole PATH_INFO as title
+		// if the routes didn't match (seldom effective).
 		if ( $matches === null ) {
-			$this->badPath = $_SERVER[ 'REQUEST_URI' ] ?? $_SERVER[ 'PATH_INFO' ] ?? '<unknown>';
-			return;
+			$pathInfo = self::getGlobalRequestPathInfo();
+			$title = wfRemovePrefix( $pathInfo ?? '', '/' );
+			if ( $title ) {
+				$matches = [ 'title' => $title ];
+			} elseif ( $pathInfo === null ) {
+				$this->badPath = $this->entryPointSubpath;
+				return;
+			}
 		}
 
 		foreach ( $matches as $key => $val ) {
