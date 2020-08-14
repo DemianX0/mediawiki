@@ -2327,8 +2327,14 @@ class Title implements LinkTarget, PageIdentity, IDBAccessObject {
 				if ( $action ) {
 					$queryFinal = $matches[1];
 					$queryFinal .= $matches[4] ?? '';
+					global $wgArticlePathWithAction;
 					if ( $wgActionPaths && ( $path = $wgActionPaths[$action] ?? null ) ) {
 						$url = str_replace( '$1', $dbkey, $path );
+						$url = wfAppendQuery( $url, $queryFinal );
+					} elseif ( $wgArticlePathWithAction ) {
+						$actionEnc = $matches[2];
+						$url = str_replace( '$action', $actionEnc, $wgArticlePathWithAction );
+						$url = str_replace( '$title', $dbkey, $url );
 						$url = wfAppendQuery( $url, $queryFinal );
 					}
 				}
