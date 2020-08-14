@@ -2322,20 +2322,14 @@ class Title implements LinkTarget, PageIdentity, IDBAccessObject {
 				global $wgVariantArticlePath, $wgActionPaths;
 				$url = false;
 				$matches = [];
+				$action = preg_match( '/^(.*&|)action=([^&]*)(&(.*)|)$/', $query, $matches ) ? urldecode( $matches[2] ) : null;
 
-				if ( $wgActionPaths
-					&& preg_match( '/^(.*&|)action=([^&]*)(&(.*)|)$/', $query, $matches )
-				) {
-					$action = urldecode( $matches[2] );
-					if ( isset( $wgActionPaths[$action] ) ) {
-						$query = $matches[1];
-						if ( isset( $matches[4] ) ) {
-							$query .= $matches[4];
-						}
-						$url = str_replace( '$1', $dbkey, $wgActionPaths[$action] );
-						if ( $query != '' ) {
-							$url = wfAppendQuery( $url, $query );
-						}
+				if ( $action ) {
+					$queryFinal = $matches[1];
+					$queryFinal .= $matches[4] ?? '';
+					if ( $wgActionPaths && ( $path = $wgActionPaths[$action] ?? null ) ) {
+						$url = str_replace( '$1', $dbkey, $path );
+						$url = wfAppendQuery( $url, $queryFinal );
 					}
 				}
 
