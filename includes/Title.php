@@ -2325,7 +2325,10 @@ class Title implements LinkTarget, IDBAccessObject {
 					if ( $query == '-' ) {
 						$query = '';
 					}
-					$url = "{$wgScript}?title={$dbkey}&{$query}";
+					global $wgUsePathInfo;
+					$url = $wgUsePathInfo
+						? "{$wgScript}/{$dbkey}?{$query}"
+						: "{$wgScript}?title={$dbkey}&{$query}";
 				}
 			}
 			Hooks::runner()->onGetLocalURL__Internal( $this, $url, $query );
