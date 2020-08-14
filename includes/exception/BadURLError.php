@@ -19,34 +19,34 @@
  */
 
 /**
- * Show an error page on a badtitle.
- *
- * Uses BadRequestError to emit a 400 HTTP error code to ensure caching proxies and
- * mobile browsers know not to cache it as valid content. (T35646)
+ * An error page that emits an HTTP 404 Not Found status code.
  *
  * @newable
- * @since 1.19
+ * @stable to extend
+ * @since 1.36
  * @ingroup Exception
  */
-class BadTitleError extends BadRequestError {
+class BadURLError extends ErrorPageError {
 	/**
 	 * @stable to call
 	 *
-	 * @param string|Message|MalformedTitleException $msg A message key (default: 'badtitletext'), or
-	 *     a MalformedTitleException to figure out things from
 	 * @param string|array $params Parameter to wfMessage()
+	 * @param string|Message $msg The message key to use (default: 'badurltext')
 	 */
-	public function __construct( $msg = 'badtitletext', $params = [] ) {
-		if ( $msg instanceof MalformedTitleException ) {
-			$errorMessage = $msg->getErrorMessage();
-			if ( !$errorMessage ) {
-				parent::__construct( 'badtitle', 'badtitletext', [] );
-			} else {
-				$errorMessageParams = $msg->getErrorMessageParameters();
-				parent::__construct( 'badtitle', $errorMessage, $errorMessageParams );
-			}
-		} else {
-			parent::__construct( 'badtitle', $msg, $params );
-		}
+	public function __construct( $params = [], $msg = 'badurltext' ) {
+		parent::__construct( 'badurl', $msg, $params );
+	}
+
+	/**
+	 * @stable to override
+	 * @param int $action
+	 *
+	 * @throws FatalError
+	 * @throws MWException
+	 */
+	public function report( $action = self::SEND_OUTPUT ) {
+		global $wgOut;
+		$wgOut->setStatusCode( 404 );
+		parent::report( $action );
 	}
 }

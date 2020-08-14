@@ -176,6 +176,7 @@ $wgAutoloadLocalClasses = [
 	'BackupReader' => __DIR__ . '/maintenance/importDump.php',
 	'BadRequestError' => __DIR__ . '/includes/exception/BadRequestError.php',
 	'BadTitleError' => __DIR__ . '/includes/exception/BadTitleError.php',
+	'BadURLError' => __DIR__ . '/includes/exception/BadURLError.php',
 	'BagOStuff' => __DIR__ . '/includes/libs/objectcache/BagOStuff.php',
 	'BanConverter' => __DIR__ . '/includes/language/converters/BanConverter.php',
 	'BaseDump' => __DIR__ . '/includes/export/BaseDump.php',
