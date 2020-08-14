@@ -255,6 +255,29 @@ $wgExtensionDirectory = "{$IP}/extensions";
 $wgStyleDirectory = "{$IP}/skins";
 
 /**
+ * Enable multiplexing all entrypoints in index.php
+ */
+$wgEntryPointDispatch = false;
+
+/**
+ * Entry point name => URL path mappings
+ * eg. 'rest' => '/rest',
+ *     'index' => '/wiki',
+ * @since 1.36
+ */
+$wgEntryPointPaths = [
+];
+
+/**
+ * Entry points that define( 'MW_NO_SESSION', 1 );
+ * @since 1.36
+ */
+$wgEntryPointsWithoutSession = [
+	'load' => true,
+	'opensearch_desc' => true,
+];
+
+/**
  * The URL path for primary article page views. This path should contain $1,
  * which is replaced by the article title.
  *

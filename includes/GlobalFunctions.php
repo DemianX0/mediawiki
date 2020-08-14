@@ -470,6 +470,20 @@ function wfAppendQuery( $url, $query ) {
 }
 
 /**
+ * Remove a prefix from the string.
+ *
+ * @param ?string $full The string to cut. Null accepted for convenience.
+ * @param string $prefix The string prefix to look for and remove.
+ * @return ?string The input string minus the prefix if found, null otherwise.
+ */
+function wfRemovePrefix( ?string $full, string $prefix ) : ?string {
+	$prefixLen = strlen( $prefix );
+	return ( $full !== null && $prefix === substr( $full, 0, $prefixLen ) )
+		? substr( $full, $prefixLen )
+		: null;
+}
+
+/**
  * Expand a potentially local URL to a fully-qualified URL. Assumes $wgServer
  * is correct.
  *
@@ -941,8 +955,9 @@ function wfIsDebugRawPage() {
 	}
 	// Check for raw action using $_GET not $wgRequest, since the latter might not be initialised yet
 	// phpcs:ignore MediaWiki.Usage.SuperGlobalsUsage.SuperGlobals
+	global $wgEntryPoint;
 	if ( ( isset( $_GET['action'] ) && $_GET['action'] == 'raw' )
-		|| MW_ENTRY_POINT === 'load'
+		|| $wgEntryPoint ?? '' === 'load'
 	) {
 		$cache = true;
 	} else {
