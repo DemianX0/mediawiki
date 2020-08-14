@@ -2322,18 +2322,16 @@ class Title implements LinkTarget, PageIdentity, IDBAccessObject {
 				$url = false;
 				$matches = [];
 
-				$articlePaths = PathRouter::getActionPaths( $wgActionPaths, $wgArticlePath );
-
-				if ( $articlePaths
+				if ( $wgActionPaths
 					&& preg_match( '/^(.*&|)action=([^&]*)(&(.*)|)$/', $query, $matches )
 				) {
 					$action = urldecode( $matches[2] );
-					if ( isset( $articlePaths[$action] ) ) {
+					if ( isset( $wgActionPaths[$action] ) ) {
 						$query = $matches[1];
 						if ( isset( $matches[4] ) ) {
 							$query .= $matches[4];
 						}
-						$url = str_replace( '$1', $dbkey, $articlePaths[$action] );
+						$url = str_replace( '$1', $dbkey, $wgActionPaths[$action] );
 						if ( $query != '' ) {
 							$url = wfAppendQuery( $url, $query );
 						}

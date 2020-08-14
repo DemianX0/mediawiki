@@ -222,9 +222,8 @@ class WebRequest {
 			}
 
 			global $wgActionPaths;
-			$articlePaths = PathRouter::getActionPaths( $wgActionPaths, $wgArticlePath );
-			if ( $articlePaths ) {
-				$router->add( $articlePaths, [ 'action' => '$key' ] );
+			if ( $wgActionPaths ) {
+				$router->add( $wgActionPaths, [ 'action' => '$key' ] );
 			}
 
 			global $wgExtraRouterPaths;

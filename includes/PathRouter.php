@@ -419,12 +419,17 @@ class PathRouter {
 	}
 
 	/**
+	 * @deprecated since 1.36, use $wgActionPaths directly:
+	 * The 'view' action is added by Setup.php on initialization.
+	 *
 	 * @internal For use by Title and WebRequest only.
 	 * @param array $actionPaths
 	 * @param string $articlePath
 	 * @return string[]|false
 	 */
 	public static function getActionPaths( array $actionPaths, $articlePath ) {
+		wfDeprecated( __METHOD__, '1.36' );
+
 		if ( !$actionPaths ) {
 			return false;
 		}

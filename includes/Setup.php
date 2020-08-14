@@ -210,6 +210,14 @@ if ( $wgArticlePath === false ) {
 		$wgArticlePath = "$wgScript?title=$1";
 	}
 }
+
+// Creation of urls requires that 'view' action's path is set.
+// By default, set it to the pretty article path.
+// Moved from PathRouter::getActionPaths().
+if ( is_array( $wgActionPaths ) && !isset( $wgActionPaths['view'] ) ) {
+	$wgActionPaths['view'] = $wgArticlePath;
+}
+
 if ( $wgResourceBasePath === null ) {
 	$wgResourceBasePath = $wgScriptPath;
 }
