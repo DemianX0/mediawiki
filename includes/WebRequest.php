@@ -260,78 +260,25 @@ class WebRequest {
 	 * @param PathRouter $router
 	 */
 	protected static function addPageRoutes( $router ) {
-		global $wgPageRoute, $wgTalkRoute, $wgValidActions;
+		global $wgArticlePathWithAction, $wgValidActions;
 		//$wgValidActions = array_keys( $wgActionPaths );
-		//$wgTalkRoute = '/$ns/$title/talk/$action';
-		//$wgTalkRoute = '/$1/$2/talk/$3';
-		$wgPageRoute = '/$2/$1/$3';
-		$wgTalkRoute = null;
-		if ( !$wgPageRoute ) {
+		if ( !$wgArticlePathWithAction ) {
 			return;
 		}
 
-		$nsinfo = MediaWikiServices::getInstance()->getNamespaceInfo();
-		$lang = MediaWikiServices::getInstance()->getContentLanguage();
-		$nsEnglish = $nsinfo->getCanonicalNamespaces();
-		$nsTranslated = $lang->getNamespaces();
-		$nsAliases = $lang->getNamespaceAliases();
-
 		$routeParams = [
-			'ns' => '$2',
-			'title' => '$2:$1',
-			'action' => '$3',
+			'title' => '$1',
+			'action' => '$2',
 		];
 		$routeConstraints = [
-			'$3' => $wgValidActions,
+			'$2' => $wgValidActions,
 		];
-
-		if ( $wgTalkRoute ) {
-			foreach( $nsEnglish as $index => &$name ) {
-				//if ( $index > 0 && $index % 2 === 1 ) {
-				if ( $nsinfo->isTalk( $index ) ) {
-					$name = null;
-				}
-			}
-
-			foreach( $nsTranslated as $index => &$name ) {
-				//if ( $index > 0 && $index % 2 === 1 ) {
-				if ( $nsinfo->isTalk( $index ) ) {
-					$name = null;
-				}
-			}
-
-			$nonTalkNamespaces = array_filter( array_merge( $nsEnglish, $nsTranslated ) );
-			foreach( $nsAliases as $name => $index ) {
-				if ( !$nsinfo->isTalk( $index ) ) {
-					$nonTalkNamespaces[] = $name;
-				}
-			}
-
-			$routeConstraints['$1'] = $nonTalkNamespaces;
-			$routeParamsTalk = [
-				'ns' => '$1_talk',
-				'title' => '$1_talk:$2',
-			] + $routeParams;
-
-			self::addPageRouteWithAction( $router, $wgTalkRoute, $routeParamsTalk, $routeConstraintsTalk );
-			self::addPageRouteWithAction( $router, $wgPageRoute, $routeParams, $routeConstraints );
-		} else {
-			$routeConstraints['$1'] = array_merge( $nsEnglish, $nsTranslated, array_keys( $nsAliases ) );
-			$routeConstraints['$1'] = $nsEnglish;
-			$routeConstraints['$1'] = [ 'en' ];
-			self::addPageRouteWithAction( $router, $wgPageRoute, $routeParams, $routeConstraints );
+		$route = $wgArticlePathWithAction;
+		foreach ( $routeParams as $key => $value ) {
+			// Replace '$title' -> '$1', etc.
+			$route = str_replace( '$' . $key, $value, $route );
 		}
-	}
-
-	/**
-	 * Helper function for addPageRoutes().
-	 * Adds 2 routes: '$ns/$title/$action' and '$ns/$title'
-	 */
-	protected static function addPageRouteWithAction( $router, $route, $routeParams, $routeConstraints ) {
 		$router->add( $route, $routeParams, $routeConstraints );
-		unset( $routeParams['action'] );
-		unset( $routeConstraints['$3'] );
-		$router->add( str_replace( '/$3', '', $route ), $routeParams, $routeConstraints );
 	}
 
 	/**
