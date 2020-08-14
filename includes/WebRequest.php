@@ -47,6 +47,37 @@ class WebRequest {
 	protected $data;
 
 	/**
+	 * Web request URL with query params.
+	 * @var string
+	 */
+	protected $requestUrl;
+
+	/**
+	 * The PATH_INFO or the path portion of the request URI.
+	 * @var string
+	 */
+	protected $requestPath;
+
+	/**
+	 * Name of default entry point.
+	 * @var string
+	 */
+	public $defaultEntryPoint = 'index';
+
+	/**
+	 * Name of the entry point for the request.
+	 * Initialized by detectEntryPoint().
+	 * @var string
+	 */
+	protected $entryPoint;
+
+	/**
+	 * The subpath of the request URL within the entry point's path.
+	 * @var string
+	 */
+	protected $entryPointSubpath;
+
+	/**
 	 * The parameters from $_GET. The parameters from the path router are
 	 * added by interpolateTitle() during Setup.php.
 	 * @var array
@@ -144,6 +175,8 @@ class WebRequest {
 	 * @internal This has many odd special cases and so should only be used by
 	 *   interpolateTitle() for index.php. Instead try getRequestPathSuffix().
 	 *
+	 * Deprecated since 1.36: always called with 'title',
+	 * default 'all' is pointless: matched '/w/index.php' as title.
 	 * @param string $want If this is not 'all', then the function
 	 * will return an empty array if it determines that the URL is
 	 * inside a rewrite path.
@@ -152,20 +185,14 @@ class WebRequest {
 	 * @throws FatalError If invalid routes are configured (T48998)
 	 */
 	public static function getPathInfo( $want = 'all' ) {
-		// PATH_INFO is mangled due to https://bugs.php.net/bug.php?id=31892
-		// And also by Apache 2.x, double slashes are converted to single slashes.
-		// So we will use REQUEST_URI if possible.
-		if ( isset( $_SERVER['REQUEST_URI'] ) ) {
-			// Slurp out the path portion to examine...
-			$url = $_SERVER['REQUEST_URI'];
-			if ( !preg_match( '!^https?://!', $url ) ) {
-				$url = 'http://unused' . $url;
-			}
-			$a = parse_url( $url );
-			if ( !$a ) {
-				return [];
-			}
-			$path = $a['path'] ?? '';
+		$path = parse_url( self::getGlobalRequestURL(), PHP_URL_PATH );
+		if ( $path ) {
+			return self::getPathMatches( $path );
+		} else {
+			$pathInfo = self::getGlobalRequestPathInfo();
+			return $pathInfo === null ? null : [ 'title' => $pathInfo ];
+		}
+	}
 
 	/**
 	 * Extract relevant query arguments from $path.
@@ -185,9 +212,6 @@ class WebRequest {
 			}
  
 			$router = new PathRouter;
-
-			// Raw PATH_INFO style
-			$router->add( "$wgScript/$1" );
 
 			global $wgArticlePath;
 			if ( $wgArticlePath ) {
@@ -219,20 +243,6 @@ class WebRequest {
 			Hooks::runner()->onWebRequestPathInfoRouter( $router );
 
 			$matches = $router->parse( $path );
-		} else {
-			global $wgUsePathInfo;
-			$matches = null;
-			if ( $wgUsePathInfo ) {
-				if ( !empty( $_SERVER['ORIG_PATH_INFO'] ) ) {
-					// Mangled PATH_INFO
-					// https://bugs.php.net/bug.php?id=31892
-					// Also reported when ini_get('cgi.fix_pathinfo')==false
-					$matches['title'] = substr( $_SERVER['ORIG_PATH_INFO'], 1 );
-				} elseif ( !empty( $_SERVER['PATH_INFO'] ) ) {
-					// Regular old PATH_INFO yay
-					$matches['title'] = substr( $_SERVER['PATH_INFO'], 1 );
-				}
-			}
 		}
 
 		return $matches;
@@ -258,6 +268,7 @@ class WebRequest {
 		} else {
 			$requestPath = $requestUrl;
 		}
+		//$requestPath = self::parseURLPath( self::getGlobalRequestURL() );
 		if ( substr( $requestPath, 0, strlen( $basePath ) ) !== $basePath ) {
 			return false;
 		}
@@ -324,6 +335,55 @@ class WebRequest {
 		} else {
 			return 'http';
 		}
+	}
+
+	/**
+	 * Return the name of the first entrypoint that matches (as prefix) the request's path.
+	 * Note: the first match is returned, even if there is a more specific
+	 * prefix later in the array.
+	 * The order in which entries are added to the array is relevant,
+	 * the first match is returned.
+	 *
+	 * This prioritizes the URL part after 'index.php/' (PATH_INFO)
+	 * - if enabled and available - over REQUEST_URI, allowing
+	 * the rewrite of the parsed subpath in the `.htaccess` file.
+	 *
+	 * @param array $entryPointPaths Entry point -> path prefix mapping.
+	 * @return ?string name of first mathing entrypoint or null for default.
+	 * @throws ConfigException if a non-default entry point's path is ''.
+	 */
+	public function detectEntryPoint( array $entryPointPaths ) : ?string {
+		$path = $this->getRequestPath();
+
+		foreach ( $entryPointPaths as $name => $prefix ) {
+			if ( !$prefix ) {
+				if ( $prefix === '' && $name !== $this->defaultEntryPoint ) {
+					throw new ConfigException( "Entry point '". $name . "'s path is empty. Only the default entry point's path can be empty." );
+				}
+				continue;
+			}
+			$prefixLen = strlen( $prefix );
+			$subpathSep = substr( $path, $prefixLen, 1 );
+			if ( ( $subpathSep === '/' || $subpathSep === '' ) && $prefix === substr( $path, 0, $prefixLen ) ) {
+				$this->entryPointSubpath = substr( $path, $prefixLen );
+				$this->entryPoint = $name;
+				return $this->entryPoint;
+			}
+		}
+		$this->entryPointSubpath = $path;
+		$this->entryPoint = $this->defaultEntryPoint;
+		return $this->entryPoint;
+	}
+
+	/**
+	 * Set the entry point in use. Should be called with MW_ENTRY_POINT when defined.
+	 *
+	 * @param string $entryPoint Name of entry point.
+	 */
+	public function setEntryPoint( string $entryPoint ) {
+		global $wgScriptPath;
+		$this->entryPoint = $entryPoint;
+		$this->entryPointSubpath = self::getGlobalRequestPathInfo( "$wgScriptPath/$entryPoint.php" );
 	}
 
 	/**
@@ -454,6 +514,15 @@ class WebRequest {
 			$data = $contLang->normalize( $data );
 		}
 		return $data;
+	}
+
+	/**
+	 * Return the subpath of the request URL within the entry point's path.
+	 *
+	 * @return string
+	 */
+	public function getEntryPointSubpath() {
+		return $this->entryPointSubpath;
 	}
 
 	/**
@@ -969,8 +1038,24 @@ class WebRequest {
 	 * @throws MWException
 	 * @return string
 	 */
-	public function getRequestURL() {
-		return self::getGlobalRequestURL();
+	public function getRequestURL() : string {
+		$this->requestUrl = $this->requestUrl ?? self::getGlobalRequestURL();
+		return $this->requestUrl;
+	}
+
+	/**
+	 * Return the PATH_INFO or the path portion of the request URI.
+	 *
+	 * @throws MWException
+	 * @return string
+	 */
+	public function getRequestPath() : string {
+		global $wgScript;
+		$this->requestPath = null
+			?? self::getGlobalRequestPathInfo()
+			?? self::parseURLPath( $this->getRequestURL(), $wgScript )
+			?? '';
+		return $this->requestPath;
 	}
 
 	/**
@@ -1001,6 +1086,49 @@ class WebRequest {
 		} else {
 			return wfGetServerUrl( PROTO_HTTPS ) . $this->getRequestURL();
 		}
+	}
+
+	/**
+	 * Return the PATH_INFO part of the request (path after '.../index.php/') if enabled and present.
+	 *
+	 * @return ?string
+	 */
+	public static function getGlobalRequestPathInfo() : ?string {
+		global $wgUsePathInfo;
+		if ( $wgUsePathInfo ) {
+			// Mangled PATH_INFO, when ORIG_PATH_INFO is set:
+			// https://bugs.php.net/bug.php?id=31892
+			// Also reported when ini_get('cgi.fix_pathinfo')==false
+			return $_SERVER['ORIG_PATH_INFO'] ?? $_SERVER['PATH_INFO'] ?? null;
+		}
+		return null;
+	}
+
+	/**
+	 * Return the path portion of an URL between the server and the query,
+	 * or the PATH_INFO part if the URL begins with the script file.
+	 *
+	 * @param string $url to parse.
+	 * @param ?string $scriptPrefix to remove from PATH_INFO style URL, ex. '/w/index.php'
+	 * @return ?string The path portion.
+	 */
+	public static function parseURLPath( string $url, ?string $scriptPrefix = null ) : ?string {
+		$path = parse_url( $url, PHP_URL_PATH );
+		$pi = null;
+		$scriptPath = $_SERVER['SCRIPT_NAME'] ?? null;
+		if ( $scriptPath ) {
+			$pi = wfRemovePrefix( $path, $scriptPath );
+			if ( substr( $pi, 0, 1 ) !== '/' ) {
+				$pi = null;
+			}
+		}
+		if ( $pi === null && $scriptPrefix && $scriptPrefix !== $scriptPath ) {
+			$pi = wfRemovePrefix( $path, $scriptPrefix );
+			if ( substr( $pi, 0, 1 ) !== '/' ) {
+				$pi = null;
+			}
+		}
+		return $pi ?? $path;
 	}
 
 	/**

@@ -7,7 +7,7 @@
  *   - define the 'MEDIAWIKI' constant.
  *   - define the $IP global variable.
  * - The entry point SHOULD do these:
- *    - define the 'MW_ENTRY_POINT' constant.
+ *    - define the 'MW_ENTRY_POINT' or 'MW_DISPATCH_ENTRY_POINT' constant.
  *    - display an error if MW_CONFIG_CALLBACK is not defined and the
  *      the file specified in MW_CONFIG_FILE (or the $IP/LocalSettings.php default)
  *      does not exist. The error should either be sent before and instead
@@ -80,9 +80,9 @@ if ( ini_get( 'mbstring.func_overload' ) ) {
 }
 
 // The MW_ENTRY_POINT constant must always exists, to make it safe to access.
-// For compat, we do support older and custom MW entryoints that don't set this,
+// For compat, we do support older and custom MW entrypoints that don't set this,
 // in which case we assign a default here.
-if ( !defined( 'MW_ENTRY_POINT' ) ) {
+if ( !defined( 'MW_ENTRY_POINT' ) && !defined( 'MW_DISPATCH_ENTRY_POINT' ) ) {
 	/**
 	 * The entry point, which may be either the script filename without the
 	 * file extension, or "cli" for maintenance scripts, or "unknown" for any
@@ -130,6 +130,8 @@ MediaWiki\HeaderCallback::register();
 // This is also the default for mbstring functions.
 mb_internal_encoding( 'UTF-8' );
 
+
+
 /**
  * Load LocalSettings.php
  */
@@ -157,6 +159,8 @@ if ( defined( 'MW_SETUP_CALLBACK' ) ) {
 	call_user_func( MW_SETUP_CALLBACK );
 }
 
+
+
 /**
  * Load queued extensions
  */
@@ -165,6 +169,12 @@ ExtensionRegistry::getInstance()->loadFromQueue();
 // Don't let any other extensions load
 ExtensionRegistry::getInstance()->finish();
 
+
+
+/**
+ * Set locale
+ */
+
 // Set the configured locale on all requests for consistency
 // This must be after LocalSettings.php (and is informed by the installer).
 if ( function_exists( 'putenv' ) ) {
@@ -172,8 +182,9 @@ if ( function_exists( 'putenv' ) ) {
 }
 setlocale( LC_ALL, $wgShellLocale );
 
+
 /**
- * Expand dynamic defaults and shortcuts
+ * Default paths
  */
 
 if ( $wgScript === false ) {
@@ -206,6 +217,59 @@ if ( $wgExtensionAssetsPath === false ) {
 	$wgExtensionAssetsPath = "$wgResourceBasePath/extensions";
 }
 
+
+/**
+ * Default entry point mappings
+ */
+$wgEntryPointPaths += [
+	'load'            => $wgLoadScript,
+	'rest'            => $wgRestPath,
+	'api'             => $wgScriptPath . '/api.php',
+	'img_auth'        => $wgScriptPath . '/img_auth.php',
+	'thumb'           => $wgScriptPath . '/thumb.php',
+	'thumb_handler'   => $wgScriptPath . '/thumb_handler.php',
+	'opensearch_desc' => $wgScriptPath . '/opensearch_desc.php',
+	'index'           => $wgScript, // Article request path.
+];
+
+// NSFileRepo extension's entry point
+if ( is_readable( $wgExtensionDirectory . '/NSFileRepo/nsfr_img_auth.php' ) ) {
+	$wgEntryPointPaths += [
+		'img_auth' => $wgExtensionDirectory . '/NSFileRepo/nsfr_img_auth.php',
+	];
+}
+
+$wgEntryPointsWithoutSession += [
+	'load' => true,
+	'opensearch_desc' => true,
+];
+
+
+
+/**
+ * Initialize the request object in $wgRequest
+ */
+$wgRequest = RequestContext::getMain()->getRequest(); // BackCompat
+
+
+/**
+ * Determine entry point from PATH_INFO / REQUEST_URI
+ */
+if ( defined( 'MW_DISPATCH_ENTRY_POINT' ) ) {
+	$wgEntryPoint = $wgRequest->detectEntryPoint( $wgEntryPointPaths );
+
+	// Loaded from index.php. Define actual entry point.
+	define( 'MW_ENTRY_POINT', $wgEntryPoint );
+
+	if ( $wgEntryPointsWithoutSession[ $wgEntryPoint ] ?? null ) {
+		define( 'MW_NO_SESSION', 1 );
+	}
+} else {
+	$wgRequest->setEntryPoint( $wgEntryPoint = MW_ENTRY_POINT );
+}
+
+
+
 // For backwards compatibility, the value of wgLogos is copied to wgLogo.
 // This is because some extensions/skins may be using $config->get('Logo')
 // to access the value.
@@ -215,6 +279,11 @@ if ( $wgLogos !== false && isset( $wgLogos['1x'] ) ) {
 if ( $wgLogo === false ) {
 	$wgLogo = "$wgResourceBasePath/resources/assets/wiki.png";
 }
+
+
+/**
+ * More default paths
+ */
 
 if ( $wgUploadPath === false ) {
 	$wgUploadPath = "$wgScriptPath/images";
@@ -243,6 +312,8 @@ if ( $wgSharedSchema === false ) {
 if ( $wgMetaNamespace === false ) {
 	$wgMetaNamespace = str_replace( ' ', '_', $wgSitename );
 }
+
+
 
 // Blacklisted file extensions shouldn't appear on the "allowed" list
 $wgFileExtensions = array_values( array_diff( $wgFileExtensions, $wgFileBlacklist ) );
@@ -520,6 +591,13 @@ if ( $wgMaximalPasswordLength !== false ) {
 	$wgPasswordPolicy['policies']['default']['MaximalPasswordLength'] = $wgMaximalPasswordLength;
 }
 
+
+
+/**
+ * Set up session handling.
+ * Requires knowledge of the used entry point.
+ */
+
 if ( $wgPHPSessionHandling !== 'enable' &&
 	$wgPHPSessionHandling !== 'warn' &&
 	$wgPHPSessionHandling !== 'disable'
@@ -544,6 +622,8 @@ MediaWikiServices::resetGlobalInstance( new GlobalVarConfig(), 'quick' );
 define( 'MW_SERVICE_BOOTSTRAP_COMPLETE', 1 );
 
 MWExceptionHandler::installHandler();
+
+
 
 // T30798: $wgServer must be explicitly set
 // @phan-suppress-next-line PhanSuspiciousValueComparisonInGlobalScope
@@ -645,8 +725,6 @@ if ( !$wgDBerrorLogTZ ) {
 	$wgDBerrorLogTZ = $wgLocaltimezone;
 }
 
-// Initialize the request object in $wgRequest
-$wgRequest = RequestContext::getMain()->getRequest(); // BackCompat
 // Set user IP/agent information for agent session consistency purposes
 $cpPosInfo = LBFactory::getCPInfoFromCookieValue(
 	// The cookie has no prefix and is set by MediaWiki::preOutputCommit()
@@ -689,6 +767,8 @@ if ( $wgRequest->getCookie( 'UseDC', '' ) === 'master' ) {
 		$logger->debug( $debug );
 	}
 } )();
+
+
 
 // Most of the config is out, some might want to run hooks here.
 Hooks::runner()->onSetupAfterCache();

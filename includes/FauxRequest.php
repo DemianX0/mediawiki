@@ -34,7 +34,6 @@ use MediaWiki\Session\SessionManager;
  */
 class FauxRequest extends WebRequest {
 	private $wasPosted = false;
-	private $requestUrl;
 	protected $cookies = [];
 
 	/**
@@ -160,7 +159,7 @@ class FauxRequest extends WebRequest {
 	 * no longer thrown.
 	 * @return string
 	 */
-	public function getRequestURL() {
+	public function getRequestURL() : string {
 		if ( $this->requestUrl === null ) {
 			throw new MWException( 'Request URL not set' );
 		}
