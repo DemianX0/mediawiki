@@ -2281,8 +2281,9 @@ class Title implements LinkTarget, IDBAccessObject {
 			$url = wfAppendQuery( $url, $query );
 		} else {
 			$dbkey = wfUrlencode( $this->getPrefixedDBkey() );
+			$baseurl = str_replace( '$1', $dbkey, $wgArticlePath );
 			if ( $query == '' ) {
-				$url = str_replace( '$1', $dbkey, $wgArticlePath );
+				$url = $baseurl;
 				Hooks::runner()->onGetLocalURL__Article( $this, $url );
 			} else {
 				global $wgVariantArticlePath, $wgActionPaths;
@@ -2319,6 +2320,11 @@ class Title implements LinkTarget, IDBAccessObject {
 						$url = str_replace( '$2', urlencode( $variant ), $wgVariantArticlePath );
 						$url = str_replace( '$1', $dbkey, $url );
 					}
+				}
+
+				global $wgSimpleArticleURLs;
+				if ( $url === false && $wgSimpleArticleURLs ) {
+					$url = wfAppendQuery( $baseurl, $query );
 				}
 
 				if ( $url === false ) {
