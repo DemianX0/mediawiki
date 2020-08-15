@@ -678,13 +678,11 @@ if ( $wgCanonicalServer === false ) {
 }
 
 // Set server name
-$serverParts = wfParseUrl( $wgCanonicalServer );
 if ( $wgServerName !== false ) {
 	wfWarn( '$wgServerName should be derived from $wgCanonicalServer, '
 		. 'not customized. Overwriting $wgServerName.' );
 }
-$wgServerName = $serverParts['host'];
-unset( $serverParts );
+$wgServerName = parse_url( $wgCanonicalServer, PHP_URL_HOST );
 
 // Set defaults for configuration variables
 // that are derived from the server name by default
