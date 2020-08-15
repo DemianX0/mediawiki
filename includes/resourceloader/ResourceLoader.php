@@ -254,7 +254,7 @@ class ResourceLoader implements LoggerAwareInterface {
 		$this->hookRunner = new HookRunner( $this->hookContainer );
 
 		// Add 'local' source first
-		$this->addSource( 'local', $config->get( 'LoadScript' ) );
+		$this->addSource( 'local', wfScript( 'load' ) );
 
 		// Special module that always exists
 		$this->register( 'startup', [ 'class' => ResourceLoaderStartUpModule::class ] );
@@ -1985,6 +1985,9 @@ MESSAGE;
 		];
 		// End of stable config vars.
 
+		$entryPointPaths = $conf->get( 'EntryPointPaths' );
+		unset( $entryPointPaths['opensearch_desc'] ); // Not needed for client code.
+
 		// Internal variables for use by MediaWiki core and/or ResourceLoader.
 		$vars += [
 			// @internal For mediawiki.widgets
@@ -1993,6 +1996,7 @@ MESSAGE;
 			// Force object to avoid "empty" associative array from
 			// becoming [] instead of {} in JS (T36604)
 			'wgActionPaths' => (object)$conf->get( 'ActionPaths' ),
+			'wgEntryPointPaths' => (object)$entryPointPaths,
 			// @internal For mediawiki.language
 			'wgTranslateNumerals' => $conf->get( 'TranslateNumerals' ),
 			// @internal For mediawiki.Title

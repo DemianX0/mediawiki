@@ -192,16 +192,19 @@ setlocale( LC_ALL, $wgShellLocale );
  */
 
 if ( $wgScript === false ) {
-	$wgScript = "$wgScriptPath/index.php";
+	$wgScript = wfScript( 'index' );
 }
 if ( $wgLoadScript === false ) {
-	$wgLoadScript = "$wgScriptPath/load.php";
+	$wgLoadScript = wfScript( 'load' );
 }
 if ( $wgRestPath === false ) {
-	$wgRestPath = "$wgScriptPath/rest.php";
+	$wgRestPath = wfScript( 'rest' );
 }
 if ( $wgArticlePath === false ) {
-	if ( $wgUsePathInfo ) {
+	if ( $wgEntryPointDispatch ) {
+		// $wgScript can be different from the 'index' entry point.
+		$wgArticlePath = wfScript( 'index' ) . '/$1';
+	} elseif ( $wgUsePathInfo ) {
 		$wgArticlePath = "$wgScript/$1";
 	} else {
 		$wgArticlePath = "$wgScript?title=$1";

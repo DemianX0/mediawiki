@@ -2539,18 +2539,14 @@ function wfQueriesMustScale() {
  * extensions; this is a wrapper around $wgScriptPath etc.
  * except for 'index' and 'load' which use $wgScript/$wgLoadScript
  *
+ * Since 1.36: Return entry point path from $wgEntryPointPaths.
+ *
  * @param string $script Script filename, sans extension
  * @return string
  */
 function wfScript( $script = 'index' ) {
-	global $wgScriptPath, $wgScript, $wgLoadScript;
-	if ( $script === 'index' ) {
-		return $wgScript;
-	} elseif ( $script === 'load' ) {
-		return $wgLoadScript;
-	} else {
-		return "{$wgScriptPath}/{$script}.php";
-	}
+	global $wgEntryPointPaths, $wgScriptPath;
+	return $wgEntryPointPaths[ $script ] ?? "{$wgScriptPath}/{$script}.php";
 }
 
 /**
