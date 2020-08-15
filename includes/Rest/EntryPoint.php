@@ -70,7 +70,7 @@ class EntryPoint {
 			$routeFiles,
 			ExtensionRegistry::getInstance()->getAttribute( 'RestRoutes' ),
 			$conf->get( 'CanonicalServer' ),
-			$conf->get( 'RestPath' ),
+			wfScript( 'rest' ),
 			$services->getLocalServerObjectCache(),
 			$responseFactory,
 			$authorizer,

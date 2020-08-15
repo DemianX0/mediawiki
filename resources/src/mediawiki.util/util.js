@@ -183,13 +183,9 @@ util = {
 	 * @return {string} URL to the script file (e.g. '/w/api.php' )
 	 */
 	wikiScript: function ( str ) {
-		if ( !str || str === 'index' ) {
-			return mw.config.get( 'wgScript' );
-		} else if ( str === 'load' ) {
-			return config.LoadScript;
-		} else {
-			return mw.config.get( 'wgScriptPath' ) + '/' + str + '.php';
-		}
+		var paths = mw.config.get( 'wgEntryPointPaths' );
+		return paths[str]
+			|| mw.config.get( 'wgScriptPath' ) + '/' + str + '.php';
 	},
 
 	/**
