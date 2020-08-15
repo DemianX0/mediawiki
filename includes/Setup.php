@@ -674,7 +674,7 @@ if ( $wgServer === false ) {
 }
 
 if ( $wgCanonicalServer === false ) {
-	$wgCanonicalServer = wfExpandUrl( $wgServer, PROTO_HTTP );
+	$wgCanonicalServer = wfExpandUrl( $wgServer, PROTO_CURRENT );
 }
 
 // Set server name
