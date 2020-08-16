@@ -18,6 +18,8 @@
  * @file
  */
 
+require_once __DIR__ . '/ClassCollector.php';
+
 /**
  * Accepts a list of files and directories to search for
  * php files and generates $wgAutoloadLocalClasses or $wgAutoloadClasses
