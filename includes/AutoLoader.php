@@ -27,7 +27,9 @@
  * Extension classes are specified with $wgAutoloadClasses
  * This array is a global instead of a static member of AutoLoader to work around a bug in APC
  */
-require_once __DIR__ . '/../autoload.php';
+if ( !defined( 'AUTOLOADGENERATOR' ) ) {
+	require_once __DIR__ . '/autoload.php';
+}
 
 class AutoLoader {
 	protected static $autoloadLocalClassesLower = null;
