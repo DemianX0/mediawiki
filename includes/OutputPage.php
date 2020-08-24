@@ -2983,6 +2983,10 @@ class OutputPage extends ContextSource {
 				'user.styles',
 			] );
 
+			// Deprecated since 1.32, called for backwards compatibility in line with deprecation policy.
+			// Deprecation warning in Skin::initPage().
+			$this->getSkin()->setupSkinUserCss( $this );
+
 			// Prepare exempt modules for buildExemptModules()
 			$exemptGroups = [ 'site' => [], 'noscript' => [], 'private' => [], 'user' => [] ];
 			$exemptStates = [];

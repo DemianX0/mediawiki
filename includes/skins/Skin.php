@@ -197,7 +197,13 @@ abstract class Skin extends ContextSource {
 				'width=device-width, initial-scale=1.0, ' .
 				'user-scalable=yes, minimum-scale=0.25, maximum-scale=5.0'
 			);
+		}
 
+		// Check for override of deprecated method `setupSkinUserCss()`.
+		// Too early to check in __construct(): headers not sent yet.
+		$myClass = new ReflectionClass( get_class( $this ) );
+		if ( $myClass->getMethod( 'setupSkinUserCss' )->getDeclaringClass()->getName() !== __CLASS__ ) {
+			wfDeprecated( 'Skin::setupSkinUserCss', '1.32' );
 		}
 	}
 
@@ -452,7 +458,7 @@ abstract class Skin extends ContextSource {
 	 * @param OutputPage $out Legacy parameter, identical to $this->getOutput()
 	 */
 	public function setupSkinUserCss( OutputPage $out ) {
-		wfDeprecated( __METHOD__, '1.32' );
+		// Deprecation warning in Skin::initPage().
 	}
 
 	/**
