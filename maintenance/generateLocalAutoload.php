@@ -9,15 +9,22 @@ require_once __DIR__ . '/../includes/AutoLoader.php';
 require_once __DIR__ . '/../includes/utils/AutoloadGenerator.php';
 
 // Mediawiki installation directory
-$base = dirname( __DIR__ );
+$IP = dirname( __DIR__ );
+genAutoload( $IP . '/includes' );
+genAutoload( $IP . '/languages' );
+genAutoload( $IP . '/maintenance' );
+//genAutoload( $IP . '/mw-config' ); // No classes.
 
-$generator = new AutoloadGenerator( $base, 'local' );
-$generator->setPsr4Namespaces( AutoLoader::getAutoloadNamespaces() );
-$generator->initMediaWikiDefault();
+function genAutoload( string $base ) {
+	$generator = new AutoloadGenerator( $base, 'local' );
+	$generator->setPsr4Namespaces( AutoLoader::getAutoloadNamespaces() );
+	$generator->readDir( $base );
 
-// Write out the autoload
-$fileinfo = $generator->getTargetFileinfo();
-file_put_contents(
-	$fileinfo['filename'],
-	$generator->getAutoload( 'maintenance/generateLocalAutoload.php' )
-);
+	// Write out the autoload
+	$fileinfo = $generator->getTargetFileinfo();
+	file_put_contents(
+		$fileinfo['filename'],
+		$generator->getAutoload( 'maintenance/generateLocalAutoload.php' )
+	);
+}
+

@@ -26,7 +26,12 @@
  * This array is a global instead of a static member of AutoLoader to work around a bug in APC
  */
 if ( !defined( 'AUTOLOADGENERATOR' ) ) {
-	require_once __DIR__ . '/autoload.php';
+	global $wgAutoloadLocalClasses;
+	$wgAutoloadLocalClasses = [];
+	require_once __DIR__ . '/_autoload.php';
+	require_once __DIR__ . '/../languages/_autoload.php';
+	require_once __DIR__ . '/../maintenance/_autoload.php';
+	// require_once __DIR__ . '/../mw-config/_autoload.php'; // No classes.
 }
 
 class AutoLoader {
@@ -143,6 +148,7 @@ class AutoLoader {
 			'MediaWiki\\Diff\\' => __DIR__ . '/diff/',
 			'MediaWiki\\Edit\\' => __DIR__ . '/edit/',
 			'MediaWiki\\EditPage\\' => __DIR__ . '/editpage/',
+			'MediaWiki\\EntryPoint\\' => __DIR__ . '/entrypoint/',
 			'MediaWiki\\FileBackend\\LockManager\\' => __DIR__ . '/filebackend/lockmanager/',
 			'MediaWiki\\Http\\' => __DIR__ . '/http/',
 			'MediaWiki\\Installer\\' => __DIR__ . '/installer/',
