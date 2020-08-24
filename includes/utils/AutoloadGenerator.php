@@ -80,7 +80,7 @@ class AutoloadGenerator {
 	 * @param string $basepath Root path of the project being scanned for classes
 	 * @param array|string $flags
 	 *
-	 *  local - If this flag is set $wgAutoloadLocalClasses will be build instead
+	 *  local - If this flag is set $wgAutoloadLocalClasses will be built instead
 	 *          of $wgAutoloadClasses
 	 */
 	public function __construct( $basepath, $flags = [] ) {
@@ -297,14 +297,7 @@ class AutoloadGenerator {
 		// sort for stable output
 		ksort( $content );
 
-		// extensions using this generator are appending to the existing
-		// autoload.
-		if ( $this->variableName === 'wgAutoloadClasses' ) {
-			$op = '+=';
-		} else {
-			$op = '=';
-		}
-
+		$op = '+=';
 		$output = implode( "\n\t", $content );
 		return <<<EOD
 <?php
@@ -363,7 +356,7 @@ EOD;
 		}
 
 		return [
-			'filename' => $this->basepath . '/autoload.php',
+			'filename' => $this->basepath . '/_autoload.php',
 			'type' => self::FILETYPE_PHP
 		];
 	}
@@ -376,23 +369,5 @@ EOD;
 	 */
 	protected static function normalizePathSeparator( $path ) {
 		return str_replace( '\\', '/', $path );
-	}
-
-	/**
-	 * Initialize the source files and directories which are used for the MediaWiki default
-	 * autoloader in {mw-base-dir}/autoload.php including:
-	 *  * includes/
-	 *  * languages/
-	 *  * maintenance/
-	 *  * mw-config/
-	 *  * any `*.php` file in the base directory
-	 */
-	public function initMediaWikiDefault() {
-		foreach ( [ 'includes', 'languages', 'maintenance', 'mw-config' ] as $dir ) {
-			$this->readDir( $this->basepath . '/' . $dir );
-		}
-		foreach ( glob( $this->basepath . '/*.php' ) as $file ) {
-			$this->readFile( $file );
-		}
 	}
 }
