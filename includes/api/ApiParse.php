@@ -388,7 +388,9 @@ class ApiParse extends ApiBase {
 			$context->setOutput( $outputPage );
 
 			if ( $skin ) {
-				// Based on OutputPage::headElement()
+				// Soft deprecated since 1.32, hard deprecated since 1.36,
+				// planned to be removed in 1.37 in line with deprecation policy.
+				// Deprecation warning in Skin::initPage().
 				$skin->doSetupSkinUserCss( $outputPage );
 
 				// Based on OutputPage::output()

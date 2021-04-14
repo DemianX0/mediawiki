@@ -3028,6 +3028,10 @@ class OutputPage extends ContextSource {
 				'noscript',
 				'user.styles',
 			] );
+
+			// Soft deprecated since 1.32, hard deprecated since 1.36,
+			// planned to be removed in 1.37 in line with deprecation policy.
+			// Deprecation warning in Skin::initPage().
 			$this->getSkin()->doSetupSkinUserCss( $this );
 
 			// Prepare exempt modules for buildExemptModules()

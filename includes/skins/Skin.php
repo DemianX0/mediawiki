@@ -221,6 +221,15 @@ abstract class Skin extends ContextSource {
 			);
 		}
 
+		/*
+		// Check for override of deprecated method `setupSkinUserCss()`.
+		// Too early to check in __construct(): headers not sent yet.
+		$myClass = new ReflectionClass( get_class( $this ) );
+		if ( $myClass->getMethod( 'setupSkinUserCss' )->getDeclaringClass()->getName() !== __CLASS__ ) {
+			wfDeprecated( 'Skin::setupSkinUserCss', '1.32' );
+		}
+		*/
+
 		$tags = [
 			'og:title' => $out->getHTMLTitle(),
 			'twitter:card' => 'summary_large_image',
