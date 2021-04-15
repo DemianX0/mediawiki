@@ -380,12 +380,16 @@ class ParserOutput extends CacheTime {
 			$text = preg_replace_callback(
 				self::EDITSECTION_REGEX,
 				function ( $m ) use ( $skin ) {
-					$editsectionPage = Title::newFromText( htmlspecialchars_decode( $m[1] ) );
-					$editsectionSection = htmlspecialchars_decode( $m[2] );
-					$editsectionAnchor = urldecode( $m[3] );
-					$editsectionContent = isset( $m[5] ) ? Sanitizer::decodeCharReferences( $m[4] ) : null;
+					$data = [
+						'enableShareLinks' => true,
+						'enableEditLinks' => true,
+						'pageTitle' => Title::newFromText( htmlspecialchars_decode( $m[1] ) ),
+						'sectionNum' => htmlspecialchars_decode( $m[2] ),
+						'sectionTitle' => urldecode( $m[3] ),
+						'sectionID' => isset( $m[5] ) ? Sanitizer::decodeCharReferences( $m[4] ) : null,
+					];
 
-					if ( !is_object( $editsectionPage ) ) {
+					if ( !is_object( $data['pageTitle'] ) ) {
 						LoggerFactory::getInstance( 'Parser' )
 							->error(
 								'ParserOutput::getText(): bad title in editsection placeholder',
@@ -399,13 +403,13 @@ class ParserOutput extends CacheTime {
 						return '';
 					}
 
-					return $skin->doEditSectionLink(
-						$editsectionPage,
-						$editsectionSection,
-						$editsectionContent,
-						$skin->getLanguage(),
-						$editsectionAnchor
-					);
+					$oldresult = $skin->doEditSectionLink( $data['pageTitle'], $data['sectionNum'], $data['sectionTitle'], $skin->getLanguage() );
+					if ( $oldresult !== null ) {
+						// Minerva
+						return $oldresult;
+					}
+
+					return $skin->doSectionLinks( $data );
 				},
 				$text
 			);

@@ -21,6 +21,7 @@
  */
 
 use MediaWiki\HookContainer\ProtectedHookAccessorTrait;
+use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Revision\RevisionLookup;
 use MediaWiki\Revision\RevisionStore;
@@ -2087,80 +2088,119 @@ abstract class Skin extends ContextSource {
 	}
 
 	/**
-	 * Create a section edit link.
+	 * Create a section edit link. Overridden method stub for backwards compatibility with older Minerva versions.
 	 *
-	 * @param Title $nt The title being linked to (may not be the same as
+	 * @param Title $pageTitle The title being linked to (may not be the same as
 	 *   the current page, if the section is included from a template)
-	 * @param string $section The designation of the section being pointed to,
+	 * @param string|null $sectionNum The anchor ID of the section being pointed to,
 	 *   to be included in the link, like "&section=$section"
-	 * @param string|null $tooltip The tooltip to use for the link: will be escaped
+	 * @param string $sectionTitle The section title to use for the link: will be escaped
 	 *   and wrapped in the 'editsectionhint' message
 	 * @param Language $lang
 	 * @param string $anchor The section HTML anchor name
-	 * @return string HTML to use for edit link
+	 * @return ?string HTML to use for edit link
 	 */
-	public function doEditSectionLink( Title $nt, $section, $tooltip, Language $lang, $anchor = '' ) {
+	public function doEditSectionLink( Title $pageTitle, ?string $sectionNum, string $sectionTitle, Language $lang ) {
+		return null;
+	}
+
+	/**
+	 * Create a section edit link.
+	 *
+	 * @param array $data:
+	 *   Title 'pageTitle' The page title being linked to (may not be the same as
+	 *     the current page, if the section is included from a template)
+	 *   string 'sectionNum' The number of the section being pointed to,
+	 *     to be included in the link, like "&section=$section"
+	 *   string 'sectionTitle' The tooltip to use for the link: will be escaped
+	 *     and wrapped in the 'editsectionhint' message
+	 *   string 'sectionID' The section's HTML anchor id
+	 * @return string HTML to use for edit links
+	 */
+	public function doSectionLinks( array $data ) {
+		$links = [];
+		if ( $data['enableShareLinks'] ) {
+			$this->createSectionShareLinks( $data['pageTitle'], $data['sectionID'], $data['sectionTitle'], $links );
+		}
+
+		if ( $data['enableEditLinks'] ) {
+			$this->createSectionEditLinks( $data['pageTitle'], $data['sectionNum'], $data['sectionTitle'], $links );
+			$this->getHookRunner()->onSkinEditSectionLinks( $this, $data['pageTitle'], $data['sectionNum'], $data['sectionTitle'], $links, $this->getLanguage() );
+		}
+
+		$linkRenderer = MediaWikiServices::getInstance()->getLinkRenderer();
+		$linksHtml = [];
+		foreach ( $links as $key => $link ) {
+			$linksHtml[] = $linkRenderer->makePreloadedLink(
+				$link['targetTitle'],
+				$link['text'],
+				$link['class'] ?? '',
+				$link['attribs'],
+				$link['query'] ?? []
+			);
+		}
+
+		$linkSeparator = '<span class="mw-editsection-divider">'
+			. $this->msg( 'pipe-separator' )->escaped()
+			. '</span>';
+		$result = '<span class="mw-editsection"><span class="mw-editsection-bracket">[</span>';
+		$result .= implode( $linkSeparator, $linksHtml );
+		$result .= '<span class="mw-editsection-bracket">]</span></span>';
+		return $result;
+	}
+
+	/**
+	 * Create section edit link(s).
+	 *
+	 * @param Title $pageTitle The title being linked to (may not be the same as
+	 *   the current page, if the section is transcluded from a template)
+	 * @param string $sectionNum The section's index on the page
+	 * @param string $sectionTitle The section title to use for the link: will be escaped
+	 *   and wrapped in the 'editsectionhint' message
+	 * @param array &$links The list of section links' data
+	 */
+	protected function createSectionEditLinks( Title $pageTitle, string $sectionNum, ?string $sectionTitle, array &$links ) {
 		// HTML generated here should probably have userlangattributes
 		// added to it for LTR text on RTL pages
 
 		$attribs = [];
-		if ( $tooltip !== null ) {
-			$attribs['title'] = $this->msg( 'editsectionhint' )->rawParams( $tooltip )
-				->inLanguage( $lang )->text();
+		if ( $sectionTitle ) {
+			$attribs['title'] = $this->msg( 'editsectionhint' )->rawParams( $sectionTitle )->text();
 		}
 
-		$links = [
-			'editsection' => [
-				'text' => $this->msg( 'editsection' )->inLanguage( $lang )->text(),
-				'targetTitle' => $nt,
-				'attribs' => $attribs,
-				'query' => [ 'action' => 'edit', 'section' => $section ]
-			]
+		$links['editsection'] = [
+			'targetTitle' => $pageTitle,
+			'text' => $this->msg( 'editsection' )->text(),
+			'class' => 'mw-editsection-source',
+			'attribs' => $attribs,
+			'query' => [ 'action' => 'edit', 'section' => $sectionNum ],
 		];
+	}
 
-		$this->getHookRunner()->onSkinEditSectionLinks( $this, $nt, $section, $tooltip, $links, $lang );
+	/**
+	 * Create section share link(s).
+	 *
+	 * @param Title $pageTitle The title being linked to (may not be the same as
+	 *   the current page, if the section is transcluded from a template)
+	 * @param string $sectionID The section's HTML anchor ID
+	 * @param string $sectionTitle The section title to use for the link: will be escaped
+	 *   and wrapped in the 'editsectionhint' message
+	 * @param array &$links The list of section links' data
+	 */
+	protected function createSectionShareLinks( Title $pageTitle, string $sectionID, string $sectionTitle, array &$links ) {
+		$this->getOutput()->addModules( 'mediawiki.page.sharewidget' );
 
-		$result = '<span class="mw-editsection"><span class="mw-editsection-bracket">[</span>';
+		$shareTooltip = $this->msg( 'share-tooltip' )->plaintextParams( $sectionTitle )->text();
 
-		$linkRenderer = MediaWikiServices::getInstance()->getLinkRenderer();
-		$linksHtml = [];
-		foreach ( $links as $k => $linkDetails ) {
-			$linksHtml[] = $linkRenderer->makeKnownLink(
-				$linkDetails['targetTitle'],
-				$linkDetails['text'],
-				$linkDetails['attribs'],
-				$linkDetails['query']
-			);
-		}
-
-		if ( $this->getConfig()->get( 'EnableSectionHeaderShare' ) && $anchor !== '' ) {
-			$this->getOutput()->addModules( 'mediawiki.page.sharewidget' );
-
-			$shareMessage = $this->msg( 'share' )
-				->inLanguage( $lang )->text();
-			$shareTooltip = $this->msg( 'share-tooltip' )
-				->plaintextParams( $tooltip )->inLanguage( $lang )->text();
-
-			$linksHtml[] = $linkRenderer->makePreloadedLink(
-				$nt->createFragmentTarget( $anchor ),
-				$shareMessage,
-				'mw-editsection-share',
-				[
-					'title' => $shareTooltip,
-					'data-mw-share-section' => $tooltip
-				]
-			);
-		}
-
-		$result .= implode(
-			'<span class="mw-editsection-divider">'
-				. $this->msg( 'pipe-separator' )->inLanguage( $lang )->escaped()
-				. '</span>',
-			$linksHtml
-		);
-
-		$result .= '<span class="mw-editsection-bracket">]</span></span>';
-		return $result;
+		$links['share'] = [
+			'targetTitle' => $pageTitle->createFragmentTarget( $sectionID ),
+			'text' => $this->msg( 'share' )->text(),
+			'class' => 'mw-editsection-share',
+			'attribs' => [
+				'title' => $shareTooltip,
+				'data-mw-share-section' => $sectionTitle,
+			],
+		];
 	}
 
 	/**
