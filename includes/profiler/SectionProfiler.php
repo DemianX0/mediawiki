@@ -469,6 +469,9 @@ class SectionProfiler {
 	 */
 	protected function getTime( $metric = 'wall' ) {
 		if ( $metric === 'cpu' || $metric === 'user' ) {
+			if ( !function_exists( 'getrusage' ) ) {
+				return 0;
+			}
 			$ru = getrusage( 0 /* RUSAGE_SELF */ );
 			$time = $ru['ru_utime.tv_sec'] + $ru['ru_utime.tv_usec'] / 1e6;
 			if ( $metric === 'cpu' ) {

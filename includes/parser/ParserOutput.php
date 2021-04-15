@@ -1248,8 +1248,8 @@ class ParserOutput extends CacheTime {
 		if ( !$clock || $clock === 'wall' ) {
 			$ret['wall'] = microtime( true );
 		}
-		if ( !$clock || $clock === 'cpu' ) {
-			$ru = getrusage( 0 /* RUSAGE_SELF */ );
+		$ru = ( !$clock || $clock === 'cpu' ) && function_exists( 'getrusage' ) ? getrusage( 0 /* RUSAGE_SELF */ ) : null;
+		if ( $ru ) {
 			$ret['cpu'] = $ru['ru_utime.tv_sec'] + $ru['ru_utime.tv_usec'] / 1e6;
 			$ret['cpu'] += $ru['ru_stime.tv_sec'] + $ru['ru_stime.tv_usec'] / 1e6;
 		}

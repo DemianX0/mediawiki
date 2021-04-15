@@ -172,7 +172,9 @@ ExtensionRegistry::getInstance()->finish();
 
 // Set the configured locale on all requests for consistency
 // This must be after LocalSettings.php (and is informed by the installer).
-putenv( "LC_ALL=$wgShellLocale" );
+if ( function_exists( 'putenv' ) ) {
+	putenv( "LC_ALL=$wgShellLocale" );
+}
 setlocale( LC_ALL, $wgShellLocale );
 
 /**

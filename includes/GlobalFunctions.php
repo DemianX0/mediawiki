@@ -2896,5 +2896,5 @@ function wfArrayPlus2d( array $baseArray, array $newValues ) {
  */
 function wfGetRusage() {
 	wfDeprecated( __FUNCTION__, '1.35' );
-	return getrusage( 0 /* RUSAGE_SELF */ );
+	return !function_exists( 'getrusage' ) ? false : getrusage( 0 /* RUSAGE_SELF */ );
 }
