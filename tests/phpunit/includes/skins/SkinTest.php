@@ -178,4 +178,36 @@ class SkinTest extends MediaWikiIntegrationTestCase {
 			$link
 		);
 	}
+
+	/**
+	 * @covers Skin::doEditSectionLink
+	 */
+	public function testDoEditSectionLink() {
+		$skin = $this->getMockBuilder( Skin::class )
+			->setMethods( [ 'outputPage', 'setupSkinUserCss' ] )
+			->getMock();
+
+		$title = Title::newFromText( 'TestPage' );
+		$section = 'section1';
+		$tooltip = 'tip';
+		$language = Language::factory( 'en' );
+		$anchor = 'test';
+
+		$expected = '<span class="mw-editsection"><span class="mw-editsection-bracket">[</span>'
+		. '<a href="/index.php?title=TestPage&amp;action=edit&amp;section=section1"'
+		. ' title="Edit section: tip">edit</a><span class="mw-editsection-bracket">]</span>'
+		. '</span>';
+		$html = $skin->doEditSectionLink( $title, $section, $tooltip, $language, $anchor );
+		$this->assertEquals( $expected, $html );
+
+		$this->setMwGlobals( 'wgEnableSectionHeaderShare', true );
+		$expected = '<span class="mw-editsection"><span class="mw-editsection-bracket">[</span>'
+		. '<a href="/index.php?title=TestPage&amp;action=edit&amp;section=section1"'
+		. ' title="Edit section: tip">edit</a><span class="mw-editsection-divider"> | </span>'
+		. '<a href="/index.php/TestPage#test" class="mw-editsection-share"'
+		. ' title="Share section: tip" data-mw-share-section="tip">share</a>'
+		. '<span class="mw-editsection-bracket">]</span></span>';
+		$html = $skin->doEditSectionLink( $title, $section, $tooltip, $language, $anchor );
+		$this->assertEquals( $expected, $html );
+	}
 }

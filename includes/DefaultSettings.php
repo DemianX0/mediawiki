@@ -3927,6 +3927,13 @@ $wgSend404Code = true;
 $wgShowRollbackEditCount = 10;
 
 /**
+ * Whether to display a share action on the edit section of every subheading.
+ *
+ * @since 1.34
+ */
+$wgEnableSectionHeaderShare = false;
+
+/**
  * Output a <link rel="canonical"> tag on every page indicating the canonical
  * server which should be used, i.e. $wgServer or $wgCanonicalServer. Since
  * detection of the current server is unreliable, the link is sent

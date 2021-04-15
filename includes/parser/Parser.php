@@ -4420,6 +4420,7 @@ class Parser {
 				// Gets replaced with html in ParserOutput::getText
 				$editlink = '<mw:editsection page="' . htmlspecialchars( $editsectionPage );
 				$editlink .= '" section="' . htmlspecialchars( $editsectionSection ) . '"';
+				$editlink .= ' anchor="' . urlencode( $anchor ) . '"';
 				if ( $editsectionContent !== null ) {
 					$editlink .= '>' . $editsectionContent . '</mw:editsection>';
 				} else {

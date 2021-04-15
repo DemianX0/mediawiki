@@ -1,0 +1,12 @@
+/*!
+ * Styles for section header share links
+ */
+
+.mw-editsection-share .mw-editsection-share-popup-title {
+	margin: 0;
+	line-height: 1;
+}
+
+.mw-editsection-share .mw-widget-copyTextLayout {
+	margin-bottom: 0.85714286em;
+}

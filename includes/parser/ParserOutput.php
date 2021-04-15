@@ -266,8 +266,12 @@ class ParserOutput extends CacheTime {
 	/** @var int Upper bound of expiry based on parse duration */
 	private $mMaxAdaptiveExpiry = INF;
 
+	// Matches the following
+	// <[mw:]editsection page=".*" section=".*" [anchor=".*"] [other future params...] />
+	// <[mw:]editsection [params...]>.*</[mw:]editsection>
 	private const EDITSECTION_REGEX =
-		'#<(?:mw:)?editsection page="(.*?)" section="(.*?)"(?:/>|>(.*?)(</(?:mw:)?editsection>))#s';
+		'#<(?:mw:)?editsection page="(.*?)" section="(.*?)"(?| anchor="(.*?)"|())'
+		. '(?:[^>]*?)(?:/>|>(.*?)(</(?:mw:)?editsection>))#s';
 
 	// finalizeAdaptiveCacheExpiry() uses TTL = MAX( m * PARSE_TIME + b, MIN_AR_TTL)
 	// Current values imply that m=3933.333333 and b=-333.333333
@@ -378,7 +382,8 @@ class ParserOutput extends CacheTime {
 				function ( $m ) use ( $skin ) {
 					$editsectionPage = Title::newFromText( htmlspecialchars_decode( $m[1] ) );
 					$editsectionSection = htmlspecialchars_decode( $m[2] );
-					$editsectionContent = isset( $m[4] ) ? Sanitizer::decodeCharReferences( $m[3] ) : null;
+					$editsectionAnchor = urldecode( $m[3] );
+					$editsectionContent = isset( $m[5] ) ? Sanitizer::decodeCharReferences( $m[4] ) : null;
 
 					if ( !is_object( $editsectionPage ) ) {
 						LoggerFactory::getInstance( 'Parser' )
@@ -398,7 +403,8 @@ class ParserOutput extends CacheTime {
 						$editsectionPage,
 						$editsectionSection,
 						$editsectionContent,
-						$skin->getLanguage()
+						$skin->getLanguage(),
+						$editsectionAnchor
 					);
 				},
 				$text
