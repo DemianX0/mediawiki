@@ -95,6 +95,9 @@ class EntryPoint {
 	public static function main() {
 		// URL safety checks
 		global $wgRequest;
+		if ( !defined( 'MW_REST_API' ) ) {
+			define( 'MW_REST_API', true );
+		}
 
 		$context = RequestContext::getMain();
 

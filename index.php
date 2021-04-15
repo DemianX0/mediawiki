@@ -43,12 +43,9 @@ wfEntryPointCheck( 'html', dirname( $_SERVER['SCRIPT_NAME'] ) );
 
 require __DIR__ . '/includes/WebStart.php';
 
-wfIndexMain();
-
-function wfIndexMain() {
-	// @todo Deprecate global $mediaWiki
-	// phpcs:ignore MediaWiki.NamingConventions.ValidGlobalName.allowedPrefix
-	global $mediaWiki;
-	$mediaWiki = new MediaWiki();
-	$mediaWiki->run();
+// Dispatch to specific entry point
+if ( $wgEntryPointDispatch ) {
+	MediaWiki\EntryPoint\EntryPointDispatcher::callEntryPoint( MW_ENTRY_POINT );
+} else {
+	MediaWiki\EntryPoint\WebPageEntryPoint::main();
 }
