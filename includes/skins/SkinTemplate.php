@@ -162,11 +162,12 @@ class SkinTemplate extends Skin {
 	 *
 	 * @param Title $title
 	 * @param string $html body text
+	 * @param bool $bodycontent true if the #mw-content-text id should be added
 	 * @return string html
 	 */
-	protected function wrapHTML( $title, $html ) {
+	protected function wrapHTML( $title, $html, bool $bodycontent = true ) {
 		# An ID that includes the actual body text; without categories, contentSub, ...
-		$realBodyAttribs = [ 'id' => 'mw-content-text' ];
+		$realBodyAttribs = $bodycontent ? [ 'id' => 'mw-content-text' ] : [];
 
 		# Add a mw-content-ltr/rtl class to be able to style based on text
 		# direction when the content is different from the UI language (only
