@@ -1,0 +1,131 @@
+// Common LESS mixin library for MediaWiki - Customizing scrollbars
+//
+// By default the folder containing this file is included in the LESS import paths,
+// which makes this file importable by all less files via `@import 'mediawiki.mixins.scrollbar.less';`.
+//
+// The mixins included below are considered a public interface for MediaWiki extensions.
+// The signatures of parametrized mixins should be kept as stable as possible.
+//
+// https://css-tricks.com/the-current-state-of-styling-scrollbars/
+// Firefox, Edge since November 2019:  https://css-tricks.com/almanac/properties/s/scrollbar-width/
+// WebKit/Chromium:  https://css-tricks.com/almanac/properties/s/scrollbar/
+// IE11:  https://stackoverflow.com/questions/9251354/css-customized-scroll-bar-in-div
+
+//
+// Scrollbar color: track (background) and thumb (scroller).
+//
+.scrollbar-color( @track-color, @thumb-color ) {
+	// IE11
+	scrollbar-base-color: @track-color;
+	scrollbar-track-color: @track-color;
+	scrollbar-face-color: @thumb-color;
+
+	// Firefox, Edge
+	scrollbar-color: @track-color @thumb-color;
+
+	// WebKit track/gutter (background)
+	&::-webkit-scrollbar-track {
+		background-color: @track-color;
+	}
+
+	// WebKit thumb
+	&::-webkit-scrollbar-thumb {
+		background-color: @thumb-color;
+	}
+}
+
+//
+// Scrollbar width: for both vertical and horizontal scrollbars.
+//
+.scrollbar-width( @scrollbar-width ) {
+	// Firefox, Edge
+	scrollbar-width: @scrollbar-width;
+
+	// WebKit/Chromium
+	&::-webkit-scrollbar {
+		width: @scrollbar-width;
+		height: @scrollbar-width;
+	}
+
+	.scrollbar-margin( @scrollbar-width / 4 );
+}
+
+.scrollbar-margin( @margin-ends, @margin-side: 0 ) {
+	&::-webkit-scrollbar-track:vertical {
+		margin: @margin-ends @margin-side;
+	}
+
+	&::-webkit-scrollbar-track:horizontal {
+		margin: @margin-side @margin-ends;
+	}
+}
+
+//
+// Scrollbar track and thumb border-radius.
+//
+.scrollbar-radius( @track-radius ) {
+	&::-webkit-scrollbar-track,
+	&::-webkit-scrollbar-thumb {
+		// Thumb's radius fits neatly into gutter radius
+		border-radius: @track-radius;
+	}
+}
+
+.scrollbar-radius( @track-radius, @thumb-radius ) {
+	// WebKit track/gutter (background)
+	&::-webkit-scrollbar-track {
+		// Thumb's radius fits neatly into gutter radius
+		border-radius: @track-radius;
+	}
+
+	// WebKit thumb
+	&::-webkit-scrollbar-button {
+		border-radius: @thumb-radius;
+	}
+}
+
+// Scrollbar button in WebKit
+.scrollbar-button( @button-length, @button-radius: 0 ) {
+	&::-webkit-scrollbar-button {
+		width: @button-length;
+		height: @button-length;
+		border-radius: @button-radius;
+		background: no-repeat center/80%;
+	}
+}
+
+.scrollbar-button-color( @button-color, @hover-color: none, @active-color: none ) {
+	&::-webkit-scrollbar-button {
+		background-color: @button-color;
+	}
+}
+
+.scrollbar-button-color( @button-color, @hover-color, @active-color: none ) {
+	&::-webkit-scrollbar-button:hover {
+		background-color: @hover-color;
+	}
+}
+
+.scrollbar-button-color( @button-color, @hover-color, @active-color ) {
+	&::-webkit-scrollbar-button:active {
+		background-color: @active-color;
+	}
+}
+
+// @arrow-color must be SVG-compatible format (rgb(,,) for ex.).
+.scrollbar-arrow( vertical, @arrow-color ) {
+	&::-webkit-scrollbar-button:vertical:increment {
+		background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='@{arrow-color}' width='10' height='10'><polygon points='0,3 10,3 5,10'/></svg>");
+	}
+	&::-webkit-scrollbar-button:vertical:decrement {
+		background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='@{arrow-color}' width='10' height='10'><polygon points='0,7 10,7 5,0'/></svg>");
+	}
+}
+.scrollbar-arrow( horizontal, @arrow-color ) {
+	&::-webkit-scrollbar-button:horizontal:increment {
+		background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='@{arrow-color}' width='10' height='10'><polygon points='3,0 3,10 10,5'/></svg>");
+	}
+	&::-webkit-scrollbar-button:horizontal:decrement {
+		background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='@{arrow-color}' width='10' height='10'><polygon points='7,0 7,10 0,5'/></svg>");
+	}
+}
