@@ -12,3 +12,14 @@
 	-webkit-transform: rotate( @deg );
 	transform: rotate( @deg );
 }
+
+// Disable animation on the element if the user has disabled animations.
+.animation-reduced() {
+	.animation-reduced( none );
+}
+
+.animation-reduced( ... ) {
+	@media ( prefers-reduced-motion: reduce ) {
+		.animation( @arguments );
+	}
+}
