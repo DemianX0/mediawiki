@@ -203,7 +203,7 @@ abstract class Skin extends ContextSource {
 	 * @return bool
 	 */
 	public function isResponsive() {
-		return $this->options['responsive'] ?? false;
+		return ( $this->options['responsive'] ?? false ) !== false;
 	}
 
 	/**
@@ -214,12 +214,27 @@ abstract class Skin extends ContextSource {
 		$skinMetaTags = $this->getConfig()->get( 'SkinMetaTags' );
 		$this->preloadExistence();
 
-		if ( $this->isResponsive() ) {
-			$out->addMeta(
-				'viewport',
-				'width=device-width, initial-scale=1.0, ' .
-				'user-scalable=yes, minimum-scale=0.25, maximum-scale=5.0'
-			);
+		$vp = $this->options['responsive'] ?? false;
+		if ( $vp !== false ) {
+			$vp = is_array( $vp ) ? $vp : [];
+			// Defaults:
+			$vp += [
+				'width' => 'device-width',
+				//'height' => 'device-height',
+				//'target-densitydpi' => 'device-dpi',
+				//'viewport-fit' => 'contain',
+				'user-scalable' => 'yes',
+				'initial-scale' => '1.0',
+				//'minimum-scale' => '0.25',
+				'minimum-scale' => '0.5',
+				'maximum-scale' => '3.0',
+			];
+			$vpstr = '';
+			foreach ( $vp as $k => $v ) {
+				$vpstr .= $vpstr ? ',' : ''; // Separator.
+				$vpstr .= $k . '=' . $v; // key=value
+			}
+			$out->addMeta( 'viewport', $vpstr );
 		}
 
 		/*
