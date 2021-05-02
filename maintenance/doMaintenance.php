@@ -48,9 +48,6 @@ if ( !$maintClass || !class_exists( $maintClass ) ) {
 // Define the MediaWiki entrypoint
 define( 'MEDIAWIKI', true );
 
-// This environment variable is ensured present by Maintenance.php.
-$IP = getenv( 'MW_INSTALL_PATH' );
-
 // Get an object to start us off
 /** @var Maintenance $maintenance */
 $maintenance = new $maintClass();

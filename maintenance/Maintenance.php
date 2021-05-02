@@ -55,11 +55,13 @@ wfEntryPointCheck( 'text' );
  */
 $maintClass = false;
 
+$IP = $IP ?? dirname( __DIR__ );
+
 // Some extensions rely on MW_INSTALL_PATH to find core files to include. Setting it here helps them
 // if they're included by a core script (like DatabaseUpdater) after Maintenance.php has already
 // been run.
-if ( strval( getenv( 'MW_INSTALL_PATH' ) ) === '' ) {
-	putenv( 'MW_INSTALL_PATH=' . realpath( __DIR__ . '/..' ) );
+if ( strval( getenv( 'MW_INSTALL_PATH' ) ) === '' && function_exists( 'putenv' ) ) {
+	putenv( 'MW_INSTALL_PATH=' . $IP );
 }
 
 require_once __DIR__ . '/includes/Maintenance.php';
